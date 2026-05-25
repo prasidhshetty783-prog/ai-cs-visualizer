@@ -1,4 +1,4 @@
-# 🌐 Interactive AI & CS Visualizer
+﻿# 🌐 Interactive AI & CS Visualizer
 
 > **Learn anything in AI and Computer Science — visually, interactively, and for free.**
 
@@ -102,8 +102,8 @@ The community can expand this to cover any topic. Suggested areas:
 | System Design Patterns | 🔜 Planned |
 | Distributed Systems | 🔜 Planned |
 | Database Internals | 🔜 Planned |
-| AI Integration for recommending video links | ?? Planned |
-| AI integration to create animated visualisation | ?? Planned |
+| AI Integration for recommending video links | 🔜 Planned |
+| AI integration to create animated visualisation | 🔜 Planned |
 | *Your idea here* | 💡 Open |
 
 ---
@@ -137,4 +137,5 @@ MIT — free to use, share, modify, and build on. See [LICENSE](LICENSE).
 ---
 
 *If this helped you learn something, give it a ⭐ and share it with someone who's studying AI or CS.*
+
 
