@@ -41,7 +41,7 @@ Click a node to understand what it does. Click two nodes to see if they're compa
 
 ### Run it instantly
 
-1. Download `preview.html`
+1. Download `index.html`
 2. Open it in Chrome, Firefox, Safari, or Edge
 3. That's it — no npm, no Python, no server
 
@@ -50,9 +50,9 @@ Click a node to understand what it does. Click two nodes to see if they're compa
 ```bash
 git clone https://github.com/YOUR_USERNAME/ai-cs-visualizer.git
 cd ai-cs-visualizer
-open preview.html   # macOS
-# or: start preview.html  (Windows)
-# or: xdg-open preview.html  (Linux)
+open index.html   # macOS
+# or: start index.html  (Windows)
+# or: xdg-open index.html  (Linux)
 ```
 
 ---
@@ -61,13 +61,13 @@ open preview.html   # macOS
 
 ```
 ai-cs-visualizer/
-├── preview.html          ← The entire app — one self-contained file
+├── index.html          ← The entire app — one self-contained file
 ├── README.md             ← You are here
 ├── CONTRIBUTING.md       ← How to add new topics and algorithms
 └── LICENSE               ← MIT
 ```
 
-The entire application — HTML, CSS, JavaScript, all data — lives in `preview.html`. This is intentional: zero-dependency, zero-build-step, runs anywhere.
+The entire application — HTML, CSS, JavaScript, all data — lives in `index.html`. This is intentional: zero-dependency, zero-build-step, runs anywhere.
 
 ---
 
