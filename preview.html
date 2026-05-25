@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Interactive AI & CS Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>/* ═══════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS  ·  Edit here to retheme the entire application.
+   Contributors: every colour, size, radius and shadow lives here.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Brand & Interactive ─────────────────────────────────────────── */
+  --clr-brand:           #0052cc;   /* primary blue — logo, active tab, back btn  */
+  --clr-brand-dark:      #0043a8;   /* brand hover state                          */
+  --clr-brand-hover-glow:rgba(0,82,204,.40);
+  --clr-active:          #3b82f6;   /* first-card selection ring                  */
+  --clr-active2:         #8b5cf6;   /* second-card selection (compat mode)        */
+
+  /* ── Text Hierarchy ─────────────────────────────────────────────── */
+  --clr-text-primary:    #0f172a;   /* headings, card titles                      */
+  --clr-text-secondary:  #374151;   /* body text, list items                      */
+  --clr-text-muted:      #64748b;   /* subtitles, labels, zoom indicator          */
+  --clr-text-faint:      #94a3b8;   /* hints, placeholders, edge labels           */
+
+  /* ── Surfaces & Backgrounds ─────────────────────────────────────── */
+  --clr-surface:         #ffffff;   /* cards, panels, top bar                     */
+  --clr-bg-page:         #eef2f7;   /* main canvas / page background              */
+  --clr-bg-subtle:       #f8fafc;   /* tab bar, scrollbar track                   */
+  --clr-bg-hover:        #f1f5f9;   /* button hover, tag backgrounds              */
+
+  /* ── Borders ─────────────────────────────────────────────────────── */
+  --clr-border:          #e2e8f0;   /* standard dividers, panel borders           */
+  --clr-border-strong:   #cbd5e1;   /* hover / focus borders                      */
+  --clr-card-stroke:     #dde4ef;   /* resting SVG card border                    */
+
+  /* ── Semantic Feedback ───────────────────────────────────────────── */
+  --clr-warn-bg:         #fffbeb;   /* hint bar / mode bar background             */
+  --clr-warn-border:     #fde68a;
+  --clr-warn-text:       #92400e;
+  --clr-info-bg:         #f0f9ff;   /* analogy box, tool chip background          */
+  --clr-info-border:     #bae6fd;
+  --clr-info-text:       #0369a1;
+  --clr-ok-bg:           #dcfce7;   /* compatibility: connected / compatible      */
+  --clr-ok-text:         #15803d;
+  --clr-ok-border:       #86efac;
+  --clr-no-bg:           #fee2e2;   /* compatibility: not directly compatible     */
+  --clr-no-text:         #dc2626;
+  --clr-no-border:       #fca5a5;
+
+  /* ── Typography ──────────────────────────────────────────────────── */
+  /* Tip: scale all text up/down by editing these six values together   */
+  --font:                'Inter', system-ui, sans-serif;
+  --fz-xs:               .62rem;    /* tiny labels, hint bar, close btn           */
+  --fz-sm:               .7rem;     /* standard UI — buttons, list items          */
+  --fz-body:             .75rem;    /* panel body text                            */
+  --fz-lg:               .85rem;    /* panel headings (h2)                        */
+  --fz-xl:               .88rem;    /* subtitles, hub card descriptions           */
+
+  /* ── Border Radii ────────────────────────────────────────────────── */
+  --r-sm:                6px;       /* small buttons, inputs                      */
+  --r-md:                8px;       /* panels, analogy boxes                      */
+  --r-lg:                14px;      /* main detail panel                          */
+  --r-xl:                18px;      /* hub cards                                  */
+  --r-pill:              99px;      /* tags, badges, chips                        */
+
+  /* ── Elevation / Shadows ─────────────────────────────────────────── */
+  --shadow-bar:          0 1px 4px rgba(0,0,0,.06);
+  --shadow-sm:           0 2px 8px rgba(0,0,0,.06);
+  --shadow-panel:        0 12px 40px rgba(0,0,0,.13);
+  --shadow-hubcard:      0 16px 40px rgba(0,0,0,.11);
+}
+
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;height:100vh;overflow:hidden;
+  display:flex;flex-direction:column;background:var(--clr-bg-page);-webkit-font-smoothing:antialiased}
+
+/* ── TOP BAR ─────────────────────────────────────────────────── */
+#bar{display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;height:50px;background:#fff;border-bottom:1px solid var(--clr-border);
+  flex-shrink:0;box-shadow:var(--shadow-bar);z-index:30}
+.bar-l{display:flex;align-items:center;gap:11px}
+.logo{width:32px;height:32px;background:var(--clr-brand);border-radius:var(--r-sm);display:flex;
+  align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px}
+.bar-l h1{font-size:var(--fz-xl);font-weight:700;color:var(--clr-text-primary);line-height:1.2}
+.bar-l p{font-size:var(--fz-xs);color:var(--clr-text-faint)}
+.bar-r{display:flex;align-items:center;gap:5px}
+.btn{height:30px;padding:0 11px;border-radius:var(--r-sm);cursor:pointer;font-size:var(--fz-sm);
+  font-weight:500;font-family:inherit;background:#fff;border:1px solid var(--clr-border);color:var(--clr-text-secondary);
+  transition:background .12s,border-color .12s}
+.btn:hover{background:var(--clr-bg-subtle);border-color:var(--clr-border-strong)}
+.btn.active-btn{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+#zoom-val{font-size:var(--fz-sm);color:var(--clr-text-muted);min-width:34px;text-align:center}
+
+/* hint bar below topbar */
+#mode-bar{height:28px;background:var(--clr-warn-bg);border-bottom:1px solid var(--clr-warn-border);
+  display:flex;align-items:center;justify-content:center;gap:8px;font-size:.67rem;
+  color:var(--clr-warn-text);flex-shrink:0;transition:all .2s}
+#mode-bar.compat-mode{background:#eff6ff;border-color:#bfdbfe;color:#1e40af}
+#mode-bar.hidden{display:none}
+
+/* ── CANVAS ──────────────────────────────────────────────────── */
+#wrap{flex:1;position:relative;overflow:hidden}
+#wrap::before{content:'';position:absolute;inset:0;
+  background-image:radial-gradient(circle,#b8c8da 1.2px,transparent 1.2px);
+  background-size:26px 26px;pointer-events:none}
+svg#cv{width:100%;height:100%;cursor:grab;display:block;position:relative;z-index:1}
+svg#cv.dragging{cursor:grabbing}
+
+/* ── GROUP BANDS ─────────────────────────────────────────────── */
+.group-band{rx:14;fill-opacity:.045;stroke-width:1.2;stroke-opacity:.25}
+.group-g{cursor:pointer}
+.group-g:hover .group-band{fill-opacity:.085;stroke-opacity:.5}
+
+/* ── CARD SVG CLASSES ────────────────────────────────────────── */
+.node{cursor:grab}
+.node:active{cursor:grabbing}
+.node.faded{opacity:.28;cursor:pointer}
+.node.faded .card-rect{stroke-dasharray:5 4!important}
+.card-rect{fill:#fff;stroke:var(--clr-card-stroke);stroke-width:1.5;filter:url(#fs)}
+.node:hover   .card-rect{stroke:var(--clr-active);stroke-width:2;filter:url(#fh)}
+.node.active  .card-rect{stroke:var(--clr-active);stroke-width:2.5;filter:url(#fa)}
+.node.active2 .card-rect{stroke:var(--clr-active2);stroke-width:2.5;filter:url(#fa2)}
+.card-rect.dashed{stroke-dasharray:7 4;stroke:var(--clr-text-faint)}
+.node.active .card-rect.dashed,.node.active2 .card-rect.dashed{stroke-dasharray:none}
+.c-label{font-size:11px;font-weight:700;fill:var(--clr-text-primary)}
+.c-desc{font-size:8.5px;fill:var(--clr-text-muted)}
+.c-divider{stroke:var(--clr-bg-hover);stroke-width:1}
+.tag-t{font-size:7.5px;font-weight:600;dominant-baseline:middle;text-anchor:middle}
+.badge-bg{fill:var(--clr-bg-hover);stroke:var(--clr-border);stroke-width:1}
+.badge-t{font-size:8px;font-weight:700;fill:var(--clr-text-muted);text-anchor:middle;dominant-baseline:middle}
+
+/* ── EDGES ───────────────────────────────────────────────────── */
+.e-shadow{fill:none;stroke:rgba(0,0,0,.07);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.e-line{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:10 5;animation:dashFlow 2s linear infinite}
+.e-line.async-conn{stroke-dasharray:5 10;animation-duration:3s}
+@keyframes dashFlow{from{stroke-dashoffset:0}to{stroke-dashoffset:-45}}
+.e-src{fill:#fff;stroke-width:2;transform-box:fill-box;transform-origin:center;
+  animation:pulseDot 2.5s ease-in-out infinite}
+@keyframes pulseDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(2.2);opacity:.25}}
+.e-lbl{font-size:7px;font-weight:600;text-anchor:middle;dominant-baseline:middle;
+  fill:var(--clr-text-faint);paint-order:stroke;stroke:var(--clr-bg-page);stroke-width:3}
+
+/* ── PANEL ───────────────────────────────────────────────────── */
+#panel{position:absolute;width:320px;max-height:calc(100% - 32px);overflow-y:auto;
+  background:#fff;border:1px solid var(--clr-border);border-radius:var(--r-lg);padding:18px 16px;
+  z-index:100;box-shadow:var(--shadow-panel);display:none}
+#panel.open{display:block;animation:panIn .18s ease}
+@keyframes panIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+#p-close{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;
+  border:none;background:var(--clr-bg-hover);color:var(--clr-text-muted);cursor:pointer;font-size:10px}
+#p-close:hover{background:var(--clr-no-bg);color:#ef4444}
+#panel h2{font-size:var(--fz-lg);font-weight:700;color:var(--clr-text-primary);margin-bottom:5px;padding-right:26px}
+#panel h3{font-size:var(--fz-xs);font-weight:700;color:var(--clr-text-faint);text-transform:uppercase;
+  letter-spacing:.09em;margin:11px 0 4px}
+#panel hr{border:none;border-top:1px solid var(--clr-bg-hover);margin:9px 0}
+
+/* detail sections */
+.p-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:var(--r-pill);
+  font-size:var(--fz-xs);font-weight:700;margin-bottom:8px}
+.p-desc{font-size:var(--fz-body);color:var(--clr-text-secondary);line-height:1.5}
+.p-simple{font-size:var(--fz-body);color:var(--clr-text-primary);line-height:1.5;background:var(--clr-warn-bg);
+  border:1px solid var(--clr-warn-border);border-radius:var(--r-md);padding:8px 10px;margin-top:5px}
+.p-simple strong{color:var(--clr-warn-text)}
+.p-detail{font-size:var(--fz-sm);color:#6b7280;line-height:1.55}
+.p-flow{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:4px}
+.flow-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;
+  border-radius:var(--r-pill);font-size:var(--fz-xs);font-weight:600;border:1px solid;cursor:pointer}
+.flow-chip:hover{opacity:.8}
+.flow-arrow{font-size:var(--fz-sm);color:var(--clr-text-faint)}
+.p-connlist{list-style:none;display:flex;flex-direction:column;gap:4px}
+.p-connlist li{display:flex;align-items:center;gap:6px;font-size:var(--fz-sm);color:var(--clr-text-secondary)}
+.cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.p-tag-chip{display:inline-block;padding:2px 8px;border-radius:var(--r-pill);
+  font-size:var(--fz-xs);font-weight:600;margin:2px 2px 0 0}
+.p-usecase-item{display:flex;align-items:flex-start;gap:6px;font-size:var(--fz-sm);
+  color:var(--clr-text-secondary);margin-bottom:4px}
+.p-usecase-item::before{content:'→';color:var(--clr-active);flex-shrink:0;font-weight:700}
+
+/* compat mode panel */
+.compat-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.compat-arrow{font-size:1.2rem;color:var(--clr-text-faint)}
+.compat-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+  border-radius:var(--r-md);font-size:var(--fz-lg);font-weight:700;width:100%;justify-content:center;margin-bottom:10px}
+.compat-ok{background:var(--clr-ok-bg);color:var(--clr-ok-text);border:1.5px solid var(--clr-ok-border)}
+.compat-no{background:var(--clr-no-bg);color:var(--clr-no-text);border:1.5px solid var(--clr-no-border)}
+.analogy-box{background:var(--clr-info-bg);border:1px solid var(--clr-info-border);border-radius:var(--r-md);
+  padding:9px 11px;font-size:var(--fz-sm);color:#0c4a6e;line-height:1.55;margin-top:5px}
+.analogy-box strong{color:#075985}
+.need-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;
+  background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;border-radius:var(--r-pill);
+  font-size:var(--fz-xs);font-weight:600;margin:2px 2px 0 0;cursor:pointer}
+.need-chip:hover{background:#ddd6fe}
+
+/* scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--clr-bg-subtle)}
+::-webkit-scrollbar-thumb{background:var(--clr-border);border-radius:3px}
+
+/* ── LEGEND ──────────────────────────────────────────────────── */
+#legend{position:absolute;bottom:50px;left:14px;background:#fff;border:1px solid var(--clr-border);
+  border-radius:var(--r-md);padding:10px 12px;z-index:50;box-shadow:var(--shadow-sm)}
+#legend h4{font-size:var(--fz-xs);font-weight:700;color:var(--clr-text-faint);text-transform:uppercase;
+  letter-spacing:.1em;margin-bottom:6px}
+.l-row{display:flex;align-items:center;gap:6px;margin-bottom:3px;font-size:var(--fz-xs);color:#6b7280}
+.l-sw{width:18px;height:2px;border-radius:2px;flex-shrink:0}
+
+#hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  font-size:var(--fz-xs);color:var(--clr-text-faint);background:#fff;padding:3px 12px;
+  border-radius:20px;border:1px solid var(--clr-border);pointer-events:none}
+
+/* ── TAB BAR ─────────────────────────────────────────────────── */
+#tab-bar{display:flex;align-items:center;gap:3px;padding:0 16px;height:36px;
+  background:var(--clr-bg-subtle);border-bottom:1px solid var(--clr-border);flex-shrink:0;z-index:20}
+.tab-btn{height:26px;padding:0 14px;border-radius:var(--r-sm);cursor:pointer;font-size:var(--fz-sm);
+  font-weight:600;font-family:inherit;background:transparent;border:none;color:var(--clr-text-muted);
+  transition:background .12s,color .12s;display:flex;align-items:center;gap:5px}
+.tab-btn:hover{background:var(--clr-bg-hover);color:var(--clr-text-secondary)}
+.tab-btn.active-tab{background:#fff;border:1px solid var(--clr-border);color:var(--clr-brand);
+  box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.tab-sep{width:1px;height:16px;background:var(--clr-border);margin:0 2px;flex-shrink:0}
+
+/* ── BACK BUTTON ─────────────────────────────────────────────── */
+#back-btn{display:none;height:28px;padding:0 13px;border-radius:var(--r-sm);cursor:pointer;
+  font-size:var(--fz-sm);font-weight:700;font-family:inherit;
+  background:linear-gradient(135deg,var(--clr-brand),#0064e1);
+  border:none;color:#fff;align-items:center;gap:5px;
+  box-shadow:0 2px 7px rgba(0,82,204,.28);
+  margin-right:20px;flex-shrink:0;
+  transition:background .15s,box-shadow .15s,transform .1s}
+#back-btn.visible{display:flex}
+#back-btn:hover{background:linear-gradient(135deg,var(--clr-brand-dark),var(--clr-brand));
+  box-shadow:0 4px 14px rgba(0,82,204,.4);transform:translateY(-1px)}
+#back-btn:active{transform:translateY(0)}
+
+/* ── ML HUB ──────────────────────────────────────────────────── */
+#ml-hub{flex:1;display:none;flex-direction:column;align-items:center;
+  justify-content:center;background:linear-gradient(135deg,#f0f4ff 0%,#fafbff 100%);
+  overflow:auto;padding:40px 20px}
+#ml-hub.active{display:flex}
+.hub-header{text-align:center;margin-bottom:44px}
+.hub-header h1{font-size:1.9rem;font-weight:800;color:var(--clr-text-primary);margin-bottom:10px}
+.hub-header p{font-size:var(--fz-xl);color:var(--clr-text-muted);max-width:480px}
+.hub-cards{display:flex;gap:22px;flex-wrap:wrap;justify-content:center}
+.hub-card{width:270px;background:#fff;border:1.5px solid var(--clr-border);border-radius:var(--r-xl);
+  padding:30px 22px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;
+  text-align:center}
+.hub-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-hubcard);border-color:#93c5fd}
+.hub-icon{font-size:2.6rem;margin-bottom:14px;line-height:1}
+.hub-card h2{font-size:1rem;font-weight:700;color:var(--clr-text-primary);margin-bottom:8px}
+.hub-card p{font-size:var(--fz-body);color:#6b7280;line-height:1.55;margin-bottom:14px}
+.hub-tags{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.hub-tag{padding:2px 9px;border-radius:var(--r-pill);font-size:var(--fz-xs);font-weight:600}
+.hub-footer{margin-top:32px;font-size:var(--fz-sm);color:var(--clr-text-faint);text-align:center}
+
+/* ── ML CANVAS breadcrumb ────────────────────────────────────── */
+#breadcrumb{display:none;position:absolute;top:10px;left:14px;z-index:50;
+  background:#fff;border:1px solid var(--clr-border);border-radius:var(--r-md);padding:4px 10px;
+  font-size:var(--fz-xs);color:var(--clr-text-muted);box-shadow:0 2px 6px rgba(0,0,0,.05)}
+#breadcrumb.visible{display:block}
+
+/* tools chip in panel */
+.tool-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;
+  background:var(--clr-info-bg);color:var(--clr-info-text);border:1px solid var(--clr-info-border);border-radius:var(--r-pill);
+  font-size:var(--fz-xs);font-weight:600;margin:2px 2px 0 0}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE  ·  ≤640px phones, ≤768px small tablets
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet: tighten top bar slightly ───────────────────────────── */
+@media(max-width:768px){
+  #bar{padding:0 12px;height:46px}
+  .bar-l p{display:none}          /* hide subtitle to save space */
+  .bar-l h1{font-size:.78rem}
+  .bar-r{gap:3px}
+  #zoom-val{min-width:28px;font-size:.65rem}
+  .btn{padding:0 8px;font-size:.65rem;height:27px}
+
+  #tab-bar{padding:0 10px;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tab-btn{padding:0 10px;font-size:.65rem;white-space:nowrap}
+  #back-btn{padding:0 9px;font-size:.65rem;margin-right:8px}
+
+  .hub-card{width:220px;padding:22px 16px}
+  .hub-header h1{font-size:1.5rem}
+}
+
+/* ── Phone: full mobile layout ──────────────────────────────────── */
+@media(max-width:640px){
+
+  /* TOP BAR — compact single-line */
+  #bar{height:44px;padding:0 10px}
+  .logo{width:28px;height:28px;font-size:13px;flex-shrink:0}
+  .bar-l{gap:7px}
+  .bar-l h1{font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+  .bar-l p{display:none}
+
+  /* Hide zoom label & compress zoom controls to icon-only */
+  #zoom-val{display:none}
+  #fit-btn{display:none}          /* remove Fit All — use pinch/scroll */
+
+  /* Compat & Legend buttons — icon only */
+  #compat-btn{font-size:0;width:30px;padding:0;justify-content:center}
+  #compat-btn::before{content:'⚡';font-size:.75rem}
+  #lgnd-btn{font-size:0;width:30px;padding:0;justify-content:center}
+  #lgnd-btn::before{content:'◧';font-size:.75rem}
+  #zoom-out-btn{width:28px;padding:0;text-align:center}
+  #zoom-in-btn{width:28px;padding:0;text-align:center}
+  .btn{height:28px}
+  .bar-r{gap:2px}
+
+  /* TAB BAR — scrollable, more compact */
+  #tab-bar{height:40px;padding:0 8px;gap:2px;overflow-x:auto;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #tab-bar::-webkit-scrollbar{display:none}
+  .tab-btn{padding:0 10px;font-size:.65rem;height:28px;white-space:nowrap;flex-shrink:0}
+  .tab-sep{display:none}
+
+  /* Back button — shorter label */
+  #back-btn{padding:0 10px;font-size:.65rem;height:26px;margin-right:6px;flex-shrink:0}
+  #back-btn::before{content:'← '}
+
+  /* MODE BAR */
+  #mode-bar{font-size:.6rem;height:24px}
+
+  /* PANEL — full-width bottom sheet on mobile */
+  #panel{
+    position:fixed !important;
+    left:0 !important; right:0 !important;
+    bottom:0 !important; top:auto !important;
+    width:100% !important;
+    max-height:72vh;
+    border-radius:var(--r-xl) var(--r-xl) 0 0;
+    border:none;border-top:1px solid var(--clr-border);
+    padding:20px 16px 32px;
+    box-shadow:0 -8px 32px rgba(0,0,0,.14);
+    overflow-y:auto
+  }
+  /* drag handle above panel */
+  #panel::before{
+    content:'';display:block;width:40px;height:4px;
+    background:var(--clr-border);border-radius:4px;
+    margin:0 auto 14px;
+  }
+  #p-close{top:14px;right:12px}
+  @keyframes panIn{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+
+  /* LEGEND — compact, collapsible-ready, bottom-right */
+  #legend{
+    bottom:auto;top:10px;left:auto;right:10px;
+    padding:7px 9px;max-width:160px
+  }
+  #legend h4{margin-bottom:4px}
+  .l-row{margin-bottom:2px}
+
+  /* HINT — shorter text, centred */
+  #hint{
+    bottom:10px;font-size:.6rem;padding:3px 10px;
+    max-width:calc(100% - 180px);   /* leave room for legend */
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+  }
+
+  /* BREADCRUMB */
+  #breadcrumb{font-size:.6rem;padding:3px 8px;top:7px;left:10px}
+
+  /* ML HUB — single-column, full-width cards */
+  #ml-hub{padding:24px 16px 32px;justify-content:flex-start;overflow-y:auto}
+  .hub-header{margin-bottom:24px}
+  .hub-header h1{font-size:1.4rem;margin-bottom:6px}
+  .hub-header p{font-size:var(--fz-sm);max-width:100%}
+  .hub-cards{flex-direction:column;gap:14px;width:100%}
+  .hub-card{width:100%;padding:20px 18px;text-align:left;border-radius:var(--r-lg)}
+  .hub-icon{font-size:2rem;margin-bottom:10px}
+  .hub-card h2{font-size:.95rem;margin-bottom:6px}
+  .hub-tags{justify-content:flex-start}
+  .hub-footer{font-size:.65rem;margin-top:20px}
+
+  /* CANVAS — touch-friendly, slightly larger hit area */
+  .node{cursor:pointer}
+}
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <div class="bar-l">
+    <div class="logo">A</div>
+    <div><h1 id="bar-title">API Gateway & Edge Fleet Architecture</h1><p id="bar-sub">Vasilios Syrakis · Interactive Architecture Visualizer</p></div>
+  </div>
+  <div class="bar-r">
+    <button class="btn" id="fit-btn" onclick="fitAll()">⊙ Fit All</button>
+    <button class="btn" id="zoom-out-btn" onclick="doZoom(-1)">−</button>
+    <span id="zoom-val">75%</span>
+    <button class="btn" id="zoom-in-btn" onclick="doZoom(1)">+</button>
+    <button class="btn" id="compat-btn" onclick="toggleCompatMode()" title="Click two cards to check compatibility">⚡ Compat</button>
+    <button class="btn" id="lgnd-btn" onclick="toggleLegend()">◧ Legend</button>
+  </div>
+</div>
+
+<!-- ── Tab Bar ── -->
+<div id="tab-bar">
+  <button id="back-btn" onclick="goBack()">← Back to ML Hub</button>
+  <button class="tab-btn active-tab" id="tab-atlassian" onclick="switchTab('atlassian')">⬡ API Gateway & Edge Fleet</button>
+  <div class="tab-sep"></div>
+  <button class="tab-btn" id="tab-ml" onclick="switchTab('ml')">🤖 Machine Learning</button>
+</div>
+
+<div id="mode-bar" class="hidden"></div>
+
+<!-- ── ML Hub (shown when ML tab active and no sub-view) ── -->
+<div id="ml-hub">
+  <div class="hub-header">
+    <h1>🤖 Machine Learning</h1>
+    <p>Explore the three core learning paradigms. Click a card to dive into its algorithms, connections, and real-world applications.</p>
+  </div>
+  <div class="hub-cards">
+    <div class="hub-card" onclick="enterMLView('supervised')">
+      <div class="hub-icon">📊</div>
+      <h2>Supervised Learning</h2>
+      <p>Learns from labeled training data to predict outcomes on new, unseen inputs.</p>
+      <div class="hub-tags">
+        <span class="hub-tag" style="background:#ede9fe;color:#6d28d9">Classification</span>
+        <span class="hub-tag" style="background:#dbeafe;color:#1d4ed8">Regression</span>
+        <span class="hub-tag" style="background:#dcfce7;color:#15803d">9 Algorithms</span>
+      </div>
+    </div>
+    <div class="hub-card" onclick="enterMLView('unsupervised')">
+      <div class="hub-icon">🔍</div>
+      <h2>Unsupervised Learning</h2>
+      <p>Discovers hidden patterns and structure in unlabeled data without human guidance.</p>
+      <div class="hub-tags">
+        <span class="hub-tag" style="background:#cffafe;color:#0e7490">Clustering</span>
+        <span class="hub-tag" style="background:#fce7f3;color:#be185d">Dimensionality</span>
+        <span class="hub-tag" style="background:#fef3c7;color:#b45309">6 Algorithms</span>
+      </div>
+    </div>
+    <div class="hub-card" onclick="enterMLView('reinforcement')">
+      <div class="hub-icon">🎮</div>
+      <h2>Reinforcement Learning</h2>
+      <p>Learns optimal behaviour by taking actions in an environment to maximise cumulative reward.</p>
+      <div class="hub-tags">
+        <span class="hub-tag" style="background:#ffedd5;color:#c2410c">Value-Based</span>
+        <span class="hub-tag" style="background:#dcfce7;color:#15803d">Policy-Based</span>
+        <span class="hub-tag" style="background:#e0e7ff;color:#3730a3">4 Algorithms</span>
+      </div>
+    </div>
+  </div>
+  <div class="hub-footer">Click any card to explore its algorithms interactively · Use the Atlassian tab to return to the architecture visualizer</div>
+</div>
+
+<div id="wrap">
+  <svg id="cv" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="fs" x="-10%" y="-12%" width="120%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity=".06"/>
+      </filter>
+      <filter id="fh" x="-12%" y="-14%" width="124%" height="145%">
+        <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#3b82f6" flood-opacity=".15"/>
+      </filter>
+      <filter id="fa" x="-14%" y="-16%" width="128%" height="150%">
+        <feDropShadow dx="0" dy="6" stdDeviation="11" flood-color="#3b82f6" flood-opacity=".22"/>
+      </filter>
+      <filter id="fa2" x="-14%" y="-16%" width="128%" height="150%">
+        <feDropShadow dx="0" dy="6" stdDeviation="11" flood-color="#8b5cf6" flood-opacity=".22"/>
+      </filter>
+    </defs>
+    <g id="viewport"></g>
+  </svg>
+
+  <!-- ── Smart-positioned detail/compat panel ── -->
+  <div id="panel">
+    <button id="p-close" onclick="closePanel()">✕</button>
+    <div id="p-content"></div>
+  </div>
+
+  <div id="legend">
+    <h4>Connection Types</h4>
+    <div id="legend-rows"></div>
+  </div>
+  <div id="hint">🖱 Drag cards · Click a card for details · Click two cards (any!) for compatibility · Click a section band for section info · Scroll to zoom</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// ①  NODE DATA  —  Schema reference for contributors
+// ───────────────────────────────────────────────────────────────
+// Every topic (Atlassian architecture, ML algorithms, etc.) is
+// made of BLOCKS (nodes), GROUPS (sections), VMETA (styles),
+// CCLR/CLBL (edge types), and COMPAT (two-node relationships).
+//
+// BLOCK schema:
+// {
+//   id:       string  — unique snake_case identifier
+//   label:    string  — human-readable name (shown on card)
+//   desc:     string  — one-line description (<100 chars)
+//   detail:   string  — full technical explanation (HTML allowed)
+//   simple:   string  — plain-English analogy, starts with emoji
+//                        format: '🎯 <strong>Plain English:</strong> ...'
+//   useCases: string[] — 3-5 real-world examples (specific, not vague)
+//   tools:    string[] — (ML views) library/tool with usage note
+//   pos:      {x, y}  — grid column/row (0-based integer)
+//                        px = x * CONFIG.COL_W + CONFIG.ORIGIN_X
+//   conns:    [{t: targetId, c: connectionType}]
+// }
+//
+// GROUPS schema:
+// {
+//   label:  string  — display name, prefix with ① ② ③ for numbering
+//   ids:    string[] — block ids in this section
+//   color:  hex     — band fill & label colour
+// }
+//
+// VMETA schema (per-node visual style):
+// {
+//   dot:   hex   — coloured dot on card
+//   tBg:   hex   — tag pill background
+//   tFg:   hex   — tag pill text
+//   tags:  string[] — searchable keywords, format '#tagname'
+//   dashed?: bool — optional dashed card border
+// }
+//
+// COMPAT schema (two-node relationships):
+// {
+//   'id1|id2': {
+//     ok:         bool   — true = compatible, false = not directly
+//     why:        string — technical reason (HTML allowed)
+//     analogy:    string — memorable plain-English analogy
+//     need:       string[] — bridge node ids if ok=false
+//     needExplain:string — how to bridge the gap
+//   }
+// }
+//
+// GROUP_INFO schema (section panel content):
+// {
+//   'Section Label': {
+//     icon:    string — emoji shown in panel header
+//     what:    string — what this section is
+//     why:     string — why it exists (Atlassian tab only; omit for ML)
+//     analogy: string — plain-English analogy for the whole section
+//     color:   hex   — matches the group band colour
+//   }
+// }
+//
+// → See CONTRIBUTING.md for step-by-step examples of adding
+//   new nodes, sections, and entire topic tabs.
+// ═══════════════════════════════════════════════════════════════
+const BLOCKS_DATA = [
+  // ── PROVISIONING PIPELINE ──────────────────────────────────
+  {
+    id:'developer', label:'Developer / Engineer',
+    desc:'Commits a YAML/JSON config file to Git to request a new network resource.',
+    detail:'A Atlassian engineer who needs a new load balancer or DNS record does not open a ticket. They commit a config file to a Git repo. A CI/CD pipeline then calls the Open Service Broker API automatically. This is called "GitOps" — infrastructure managed like code.',
+    simple:'🔑 <strong>Plain English:</strong> Think of this like a chef writing a new recipe on a notecard and dropping it into an "in-tray". They describe exactly what dish (resource) they want made. They walk away, and the kitchen system handles the rest — they don\'t cook it themselves.',
+    useCases:['GitOps pipelines (Atlassian, Spotify, Netflix)','Internal Developer Platforms (IDPs) like Backstage.io','AWS Service Catalog — browse & request cloud resources','Kubernetes Operators — declarative infra management'],
+    pos:{x:0,y:0}, conns:[{t:'osb_broker',c:'api_call'}]
+  },
+  {
+    id:'osb_broker', label:'Open Service Broker (FastAPI)',
+    desc:'The front-door API. Validates developer resource requests and queues them for processing.',
+    detail:'Vasilios built this with Python FastAPI, following the Open Service Broker API standard. When CI/CD calls it with a "blueprint", the broker validates it and drops it into SQS. It deliberately does not build the resource itself — it just accepts and queues. This keeps the API fast and responsive.',
+    simple:'🏛 <strong>Plain English:</strong> Like the receptionist at a government office. They accept your application form, stamp it as valid, give you a ticket number, and place it in the processing queue — but they don\'t process it themselves. Their job is a fast intake, not the actual work.',
+    useCases:['Open Service Broker API standard (Cloud Foundry, Kubernetes)','AWS Service Catalog\'s provisioning API','Backstage.io software templates','Service Mesh control planes (Istio, Linkerd)'],
+    pos:{x:1,y:0}, conns:[{t:'sqs_queue',c:'asynchronous_task'}]
+  },
+  {
+    id:'sqs_queue', label:'Provisioning Queue (SQS)',
+    desc:'The waiting room. Holds blueprint tasks so the broker API never blocks or freezes.',
+    detail:'Uses Amazon Simple Queue Service (SQS). The critical insight: without a queue, if 100 developers all request resources simultaneously, the broker API would freeze waiting for each to complete. SQS decouples intake from processing — the broker returns instantly, and the queue delivers tasks to workers whenever they\'re ready.',
+    simple:'🎟 <strong>Plain English:</strong> Imagine a coffee shop with a counter and a barista in the back. Instead of standing at the counter while your coffee is made (blocking), you get a number, the barista picks up tickets in order, and you wait separately. The queue (tickets) separates "taking orders" from "making orders".',
+    useCases:['Apache Kafka — high-throughput event streaming','RabbitMQ — traditional message brokering','AWS SQS/SNS — cloud native queuing','Celery task queues in Python applications'],
+    pos:{x:2,y:0}, conns:[{t:'async_worker',c:'task_delivery'}]
+  },
+  {
+    id:'async_worker', label:'Async Worker',
+    desc:'The builder. Picks up blueprints from the queue, creates real cloud resources, and records the outcome.',
+    detail:'The worker runs as a background process, continuously polling SQS for new tasks. When it picks up a blueprint, it makes real API calls — to AWS Route53 to create DNS records, to CloudFront to configure CDNs, etc. Once done, it writes the final state (e.g. "Load Balancer X serves domain Y") into DynamoDB.',
+    simple:'👷 <strong>Plain English:</strong> Like the barista who grabs ticket #42, makes the specific coffee it describes, and marks it as "done" on a whiteboard when finished. The whiteboard (DynamoDB) always shows the current state of every order ever processed.',
+    useCases:['Celery workers (Python background jobs)','AWS Lambda + SQS triggers','Kubernetes Jobs and CronJobs','Sidekiq (Ruby) / Bull.js (Node) background processors'],
+    pos:{x:3,y:0}, conns:[{t:'platform_db',c:'db_update'},{t:'route53',c:'provisioning'},{t:'cloudfront',c:'provisioning'}]
+  },
+  {
+    id:'route53', label:'Route 53 (DNS)',
+    desc:'AWS DNS service. The Worker provisions DNS records so domain names point to the right Envoy proxies.',
+    detail:'When a developer requests a new endpoint (e.g. "api.atlassian.com/jira-v2"), the Async Worker calls Route53 to create or update the DNS record pointing to the correct Envoy Proxy fleet. Route53 is also used for health-check based routing — if one region goes down, traffic can be automatically re-routed.',
+    simple:'📖 <strong>Plain English:</strong> Like the phone book of the internet. When you type "jira.atlassian.com", Route53 is what translates that name into an actual server IP address. Think of it as "looking up a friend\'s address in a contacts app before visiting them".',
+    useCases:['Latency-based routing across global regions','Health-check failover (auto-reroute if a server dies)','Blue/green deployment DNS switching','Multi-region active-active architectures'],
+    pos:{x:4,y:0}, conns:[]
+  },
+  {
+    id:'cloudfront', label:'CloudFront (CDN)',
+    desc:'AWS Content Delivery Network. Caches content at 400+ edge locations globally to reduce latency.',
+    detail:'CloudFront is provisioned by the Async Worker when a developer needs a CDN-backed endpoint. It caches static assets (JS, CSS, images) at 400+ PoPs globally, so users get content from a nearby server instead of the origin. It also provides DDoS protection and terminates TLS.',
+    simple:'📦 <strong>Plain English:</strong> Like having a local warehouse near every major city instead of shipping everything from one central warehouse. If 10,000 users in Tokyo load the Jira homepage, CloudFront serves it from a nearby Tokyo server — not from Sydney — so it\'s much faster.',
+    useCases:['Static website hosting (S3 + CloudFront)','API response caching','DDoS protection & WAF integration','Video streaming with adaptive bitrate'],
+    pos:{x:4,y:1}, conns:[]
+  },
+  {
+    id:'platform_db', label:'Platform State DB (DynamoDB)',
+    desc:'The blueprint library. The authoritative source of what resources exist and how they are wired.',
+    detail:'DynamoDB stores the "final state" of every provisioned resource: which load balancer connects which domain to which backend service. This is static data once written — it doesn\'t change unless a developer re-provisions. The Control Plane reads this to know "what should the routing look like?".',
+    simple:'📚 <strong>Plain English:</strong> Like a master filing cabinet containing every "final blueprint" for every building ever constructed. When the city planner (Control Plane) wants to update road signs (Envoy routing rules), they read this cabinet to know where all the buildings actually are.',
+    useCases:['Event sourcing — storing system state as events','AWS DynamoDB for low-latency key-value lookups','etcd — Kubernetes uses this for cluster state','Redis — in-memory state for real-time systems'],
+    pos:{x:3,y:1}, conns:[{t:'control_plane',c:'config_source'}]
+  },
+
+  // ── CONFIGURATION CONTROL PLANE ────────────────────────────
+  {
+    id:'s3_context', label:'S3 Config Bucket',
+    desc:'Extra building instructions. Stores external config rules (ACLs, rate limits) that change frequently.',
+    detail:'An S3 bucket holds "context" files that the Control Plane reads alongside the DynamoDB state. These might include access control lists ("only these IPs can reach this endpoint"), rate-limiting thresholds, or feature flags. Storing them in S3 rather than the DB allows them to be updated without a full re-provisioning cycle.',
+    simple:'📝 <strong>Plain English:</strong> Like a separate binder of "house rules" kept next to the master blueprint filing cabinet. The builder (Control Plane) reads both — the blueprints AND the current rules — before deciding exactly how to configure things.',
+    useCases:['S3-based feature flag stores','AWS AppConfig — dynamic config delivery','etcd ConfigMaps in Kubernetes','HashiCorp Vault for secrets + config'],
+    pos:{x:0,y:2}, conns:[{t:'control_plane',c:'config_source'}]
+  },
+  {
+    id:'control_plane', label:'Control Plane (Sovereign)',
+    desc:'The mastermind. Reads state from DynamoDB & S3, then compiles it into Envoy routing configurations.',
+    detail:'Vasilios called this "Sovereign" (built with FastAPI). It is the brain of the system. It continuously reads the "what" (resource state from DynamoDB and context from S3) and merges them with generic templates through the Config Engine to produce specific Envoy config files. It\'s a separation of "what should exist" from "how to make it exist".',
+    simple:'🧠 <strong>Plain English:</strong> Like an air traffic controller who reads the day\'s flight schedule (DynamoDB), checks current weather/NOTAMs (S3 context), and uses standardized procedures (templates) to produce exact instructions for each plane (Envoy proxy).',
+    useCases:['Kubernetes Control Plane — manages cluster desired state','Istio Pilot — generates Envoy config for service mesh','AWS Control Tower — centralized governance','Terraform Plan — computes desired vs actual state'],
+    pos:{x:1,y:2}, conns:[{t:'config_engine',c:'template_render'}]
+  },
+  {
+    id:'config_engine', label:'Config Engine (Routes/Templates)',
+    desc:'Merges state data with generic templates to produce specific Envoy config (listeners, routes, clusters).',
+    detail:'The Config Engine takes the structured data from the Control Plane and fills it into Envoy-specific templates. The output is xDS (discovery service) configurations: Listeners (which port/protocol to accept), Routes (which URL patterns to match), Clusters (which upstream backends to forward to). These are pushed dynamically to each Envoy proxy via gRPC.',
+    simple:'🖨 <strong>Plain English:</strong> Like a mail-merge system. You have a template letter ("Dear [NAME], your [PRODUCT] order is ready...") and a spreadsheet of customer data. The Config Engine merges them to produce thousands of personalized letters (specific Envoy configs) automatically.',
+    useCases:['Envoy xDS APIs (LDS, RDS, CDS, EDS)','Helm charts — Kubernetes config templates','Jsonnet / Cue — data templating languages','AWS CloudFormation template rendering'],
+    pos:{x:2,y:2}, conns:[{t:'envoy_proxy',c:'dynamic_update'}]
+  },
+  {
+    id:'cloudformation', label:'CloudFormation Template',
+    desc:'AWS Infrastructure-as-Code. Defines the EC2 instances and networking that physically runs the Envoy fleet.',
+    detail:'The CloudFormation template defines the underlying EC2 infrastructure that hosts the Envoy proxies: VPC, subnets, security groups, auto-scaling groups, NLBs, IAM roles, ACM certificates, KeyPairs, and the AMI (machine image with Envoy pre-installed). This infrastructure layer is separate from the Envoy config — CloudFormation builds the "building", the Config Engine furnishes it.',
+    simple:'🏗 <strong>Plain English:</strong> Like a construction blueprint for a building. It defines exactly what to build (concrete, steel, wiring — i.e. VPC, EC2, NLB). Once the building exists, the interior designers (Config Engine) decide how to arrange the furniture (Envoy routing rules).',
+    useCases:['Terraform — HashiCorp\'s equivalent IaC tool','AWS CDK — define infra in Python/TypeScript','Pulumi — IaC with real programming languages','Ansible — config management and provisioning'],
+    pos:{x:3,y:2}, conns:[{t:'envoy_proxy',c:'infrastructure'}]
+  },
+
+  // ── EDGE INFRASTRUCTURE ────────────────────────────────────
+  {
+    id:'envoy_proxy', label:'Envoy Proxy Fleet (2,000+ globally)',
+    desc:'The traffic guard. Routes ALL Atlassian customer traffic. 2,000+ instances across 13 AWS regions.',
+    detail:'Envoy is the only component a customer request ever touches. Each proxy is a C++ process that handles TLS termination, load balancing, observability, and request routing. The fleet of 2,000+ proxies is configured dynamically by the Control Plane — they know nothing about routing until Sovereign tells them. Each proxy has sidecar containers for AuthN and rate-limiting.',
+    simple:'🚦 <strong>Plain English:</strong> Like 2,000 highly-trained traffic police officers stationed at every intersection globally. They don\'t decide the rules themselves — headquarters (Control Plane) radios them with today\'s traffic plan. They just execute it perfectly for every car (request) that passes through.',
+    useCases:['Service mesh data plane (Istio, Consul Connect)','API Gateway pattern (NGINX, Kong, Traefik)','AWS App Mesh — managed Envoy sidecar','Kubernetes Ingress controllers'],
+    pos:{x:1,y:3}, conns:[{t:'auth_sidecar',c:'sidecar_pattern'},{t:'rate_sidecar',c:'sidecar_pattern'},{t:'backend_microservice',c:'egress_traffic'}]
+  },
+  {
+    id:'auth_sidecar', label:'AuthN Sidecar (Rust)',
+    desc:'The security guard. A Rust sidecar that verifies customer identity before any request reaches a backend.',
+    detail:'Vasilios wrote this in Rust for performance. It runs as a separate container "beside" each Envoy proxy (the sidecar pattern). When a request arrives, Envoy delegates to this sidecar: "Is this user authenticated?" If the answer is no, the request is rejected at the edge — it never reaches any backend. This offloads security from thousands of microservices.',
+    simple:'🛂 <strong>Plain English:</strong> Like the passport control officer at the airport. Before you can get to any gate (backend service), you must show your passport (auth token) to this officer. If it\'s invalid, you\'re turned away immediately — you never even enter the terminal.',
+    useCases:['Envoy ext_authz filter — delegate auth to a sidecar','OAuth2 Proxy — authenticate users at the edge','OPA (Open Policy Agent) — policy-based auth','mTLS — mutual TLS for service-to-service auth'],
+    pos:{x:0,y:3}, conns:[]
+  },
+  {
+    id:'rate_sidecar', label:'Rate-Limit Sidecar',
+    desc:'The traffic light. Caps how many requests any single user can make, protecting all backend services.',
+    detail:'Another sidecar container running beside Envoy. It implements global rate limiting — if a single customer makes too many requests (intentional or accidental), this sidecar throttles them at the edge. The key insight: without this, each of Atlassian\'s thousands of microservices would need to implement rate limiting independently. The Edge handles it once, centrally.',
+    simple:'🚥 <strong>Plain English:</strong> Like a bouncer at a club who tracks how many times you\'ve entered in the past hour. After a certain number, you\'re told to wait outside regardless of which room you want to go to. All the rooms (backends) are protected without each room needing its own bouncer.',
+    useCases:['Redis-based distributed rate limiting','AWS API Gateway throttling','Kong Rate Limiting plugin','Envoy rate limit filter with gRPC service'],
+    pos:{x:0,y:4}, conns:[]
+  },
+
+  // ── TRAFFIC ENDPOINTS ──────────────────────────────────────
+  {
+    id:'customer_request', label:'Customer Request',
+    desc:'Any live request from a user of Jira, Confluence, Bitbucket, or Trello hitting the Edge Fleet.',
+    detail:'Example: A developer in Tokyo clicks "Clone" on a Bitbucket repo. This HTTPS request hits the nearest Envoy proxy. The proxy checks with the AuthN sidecar (authenticated?), checks with the Rate-Limit sidecar (quota ok?), then looks up its routing table (from Config Engine) to determine which backend Bitbucket service handles this request. All in <5ms.',
+    simple:'🧑‍💻 <strong>Plain English:</strong> Like you calling a company\'s main phone number. You don\'t know which department will answer — the switchboard (Envoy) routes you to the right person (backend) after checking your identity (AuthN sidecar) and that you haven\'t called too many times today (Rate-Limit sidecar).',
+    useCases:['HTTPS REST API calls','GraphQL queries','gRPC service calls','WebSocket connections'],
+    pos:{x:1,y:4}, conns:[{t:'envoy_proxy',c:'ingress_traffic'}]
+  },
+  {
+    id:'backend_microservice', label:'Backend Microservice',
+    desc:'The final destination. The Jira/Confluence/Bitbucket service that actually handles the business logic.',
+    detail:'Atlassian has thousands of these — the Jira Issue Service, the Confluence Page Service, the Bitbucket Clone Service, etc. Because the Edge Platform handles security (AuthN), rate-limiting, DNS routing, and load balancing, these services can focus entirely on business logic. They are "unburdened" from infrastructure concerns.',
+    simple:'👨‍🍳 <strong>Plain English:</strong> Like the specialist chef in the back kitchen who only cooks. They don\'t deal with the customer (handled by front-of-house/Envoy), check reservations (Auth Sidecar), or manage the queue (SQS). They just receive a clean order ticket and cook the dish.',
+    useCases:['Jira Issue Service — create/update issues','Confluence Page Service — document storage','Bitbucket — Git hosting and CI/CD','Trello Board Service — kanban management'],
+    pos:{x:2,y:4}, conns:[]
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════
+// ②  VISUAL METADATA  (colours, tags, dashed-border flag)
+// ═══════════════════════════════════════════════════════════════
+const VMETA = {
+  developer:           {dot:'#64748b',tBg:'#f1f5f9',tFg:'#334155',tags:['#gitops','#config','#ci-cd']},
+  osb_broker:          {dot:'#22c55e',tBg:'#dcfce7',tFg:'#15803d',tags:['#fastapi','#python','#api'],dashed:true},
+  sqs_queue:           {dot:'#f59e0b',tBg:'#fef3c7',tFg:'#b45309',tags:['#aws','#queue','#async']},
+  async_worker:        {dot:'#3b82f6',tBg:'#dbeafe',tFg:'#1d4ed8',tags:['#worker','#dns','#builder']},
+  route53:             {dot:'#ec4899',tBg:'#fce7f3',tFg:'#be185d',tags:['#aws','#dns','#routing']},
+  cloudfront:          {dot:'#f97316',tBg:'#ffedd5',tFg:'#c2410c',tags:['#cdn','#aws','#cache']},
+  platform_db:         {dot:'#8b5cf6',tBg:'#ede9fe',tFg:'#6d28d9',tags:['#dynamodb','#state','#aws']},
+  s3_context:          {dot:'#f59e0b',tBg:'#fef3c7',tFg:'#b45309',tags:['#s3','#config','#aws']},
+  control_plane:       {dot:'#22c55e',tBg:'#dcfce7',tFg:'#15803d',tags:['#brain','#sovereign','#fastapi']},
+  config_engine:       {dot:'#06b6d4',tBg:'#cffafe',tFg:'#0e7490',tags:['#xds','#templates','#envoy']},
+  cloudformation:      {dot:'#64748b',tBg:'#f1f5f9',tFg:'#334155',tags:['#iac','#aws','#ec2']},
+  envoy_proxy:         {dot:'#06b6d4',tBg:'#cffafe',tFg:'#0e7490',tags:['#envoy','#2000+','#global']},
+  auth_sidecar:        {dot:'#22c55e',tBg:'#dcfce7',tFg:'#15803d',tags:['#rust','#authn','#edge']},
+  rate_sidecar:        {dot:'#f97316',tBg:'#ffedd5',tFg:'#c2410c',tags:['#ratelimit','#sidecar']},
+  customer_request:    {dot:'#3b82f6',tBg:'#dbeafe',tFg:'#1d4ed8',tags:['#jira','#user','#https']},
+  backend_microservice:{dot:'#94a3b8',tBg:'#f1f5f9',tFg:'#475569',tags:['#service','#backend','#api']}
+};
+
+const CCLR = {
+  api_call:'#64748b', asynchronous_task:'#f59e0b', task_delivery:'#3b82f6',
+  db_update:'#10b981', provisioning:'#ec4899', config_source:'#8b5cf6',
+  template_render:'#06b6d4', dynamic_update:'#22c55e', infrastructure:'#f97316',
+  sidecar_pattern:'#6366f1', ingress_traffic:'#06b6d4', egress_traffic:'#f97316'
+};
+const CLBL = {
+  api_call:'API call', asynchronous_task:'async task', task_delivery:'task delivery',
+  db_update:'DB write', provisioning:'provisions', config_source:'config read',
+  template_render:'render', dynamic_update:'push config', infrastructure:'creates infra',
+  sidecar_pattern:'sidecar', ingress_traffic:'ingress', egress_traffic:'egress'
+};
+
+// ── Architectural groups (visual bands) ────────────────────
+const GROUPS = [
+  {label:'① Provisioning Pipeline', ids:['developer','osb_broker','sqs_queue','async_worker','route53','cloudfront','platform_db'], color:'#3b82f6'},
+  {label:'② Configuration Control Plane', ids:['s3_context','control_plane','config_engine','cloudformation'], color:'#8b5cf6'},
+  {label:'③ Edge Fleet (2,000+ Envoy proxies)', ids:['auth_sidecar','envoy_proxy','rate_sidecar'], color:'#06b6d4'},
+  {label:'④ Live Traffic', ids:['customer_request','backend_microservice'], color:'#f97316'}
+];
+
+// ── Section descriptions (for group panel) ────────────────────
+const GROUP_INFO = {
+  '① Provisioning Pipeline':{
+    icon:'🏗',
+    what:'The developer-facing intake layer. Everything from an engineer writing a config file to the moment a real cloud resource (DNS record, CDN endpoint) is created lives here.',
+    why:'Atlassian engineers need a way to request infrastructure without filing tickets or SSHing into servers. This pipeline is the answer: write config → automated system handles the rest. The queue (SQS) and async worker decouple intake from execution — so thousands of simultaneous requests never jam the broker API.',
+    analogy:'Like a restaurant\'s full order-to-kitchen pipeline. The receptionist (OSB Broker) takes the written order, the ticket printer (SQS Queue) routes it to the kitchen, and the chef (Async Worker) actually prepares the dish. The engineer (Developer) just writes what they want — they never cook it themselves.',
+    color:'#3b82f6'
+  },
+  '② Configuration Control Plane':{
+    icon:'🧠',
+    what:'The brain of the system. This section reads "what resources should exist" from the database, merges it with external config, and translates it into Envoy-specific routing rules — then pushes them live to 2,000+ proxies worldwide.',
+    why:'There is a fundamental separation of concerns: one side knows <em>what</em> should exist (DynamoDB state), the other knows <em>how</em> to express it as working Envoy config (templates). The Control Plane bridges the two. Without this layer every Envoy proxy would need direct knowledge of every resource — unmanageable at global scale.',
+    analogy:'Like an air traffic control tower. The flight schedule (DynamoDB) says which flights exist. ATC (Control Plane) reads it, checks the weather (S3 context), and radios exact, personalised instructions (Config Engine output) to every plane (Envoy proxy) in real time.',
+    color:'#8b5cf6'
+  },
+  '③ Edge Fleet (2,000+ Envoy proxies)':{
+    icon:'🚦',
+    what:'The runtime infrastructure — 2,000+ Envoy proxy instances across 13 AWS regions. Every single Atlassian customer request passes through this layer. No request ever reaches a backend microservice without first passing through here.',
+    why:'Centralising cross-cutting concerns (security, rate-limiting, routing, observability) at the edge means none of Atlassian\'s thousands of microservices need to implement these themselves. The sidecar pattern (AuthN + Rate-Limit running as separate containers beside each Envoy) means each concern is independently deployable and upgradeable without touching the others.',
+    analogy:'Like a global chain of border checkpoints. Each checkpoint (Envoy) has a passport officer (AuthN sidecar) and a customs agent (Rate-Limit sidecar). Everyone must pass through — there is no bypass. All the rules are set centrally by headquarters (Control Plane) and radioed to every checkpoint in real time.',
+    color:'#06b6d4'
+  },
+  '④ Live Traffic':{
+    icon:'🌐',
+    what:'The two endpoints of a live customer interaction: the incoming request from a Jira/Confluence/Bitbucket user, and the backend microservice that ultimately handles their business logic.',
+    why:'These are in their own section to illustrate the before-and-after of the Edge Platform\'s work. A customer request enters raw — unverified, unrouted. It exits the Edge layer verified, rate-checked, and precisely routed to exactly the right backend microservice. All in under 5ms, transparent to the customer.',
+    analogy:'The start and finish of a relay race. The customer is the opening runner carrying the baton; the backend microservice is the anchor leg that crosses the finish line. The entire Edge Platform (Envoy + sidecars + routing config) is all the runners in between.',
+    color:'#f97316'
+  },
+
+  /* ── ML: SUPERVISED LEARNING ─────────────────────────────────── */
+  '① Classification Problems':{
+    icon:'🏷',
+    what:'Algorithms that predict which discrete category a data point belongs to. Given input features, the model outputs one of N predefined labels — spam/not-spam, cat/dog, digit 0–9, cancer/benign.',
+    analogy:'A human expert sorting emails into folders. They look at the content (features) and decide: "this goes in Spam, this goes in Work, this goes in Personal." Classification algorithms learn to do this automatically from thousands of labelled examples.',
+    color:'#8b5cf6'
+  },
+  '② Regression Problems':{
+    icon:'📈',
+    what:'Algorithms that predict a continuous numerical value. Same input features — but the answer is a number on a spectrum, not a category label. Temperature, price, revenue, probability scores.',
+    analogy:'A real estate agent estimating a house price. They look at size, location, age (features) and output a specific number — not "expensive" or "cheap" but exactly £427,000. Regression algorithms learn this mapping from historical sold prices.',
+    color:'#3b82f6'
+  },
+
+  /* ── ML: UNSUPERVISED LEARNING ───────────────────────────────── */
+  '① Partitional Clustering':{
+    icon:'🎯',
+    what:'Algorithms that divide all data points into K non-overlapping groups simultaneously. Every point belongs to exactly one cluster. Requires specifying K (or epsilon for density-based). Fast and scalable to millions of points.',
+    analogy:'Dividing a city into K postal districts. Every house belongs to exactly one district. The algorithm draws those district boundaries by finding natural density centres in the data — not by geography, but by similarity.',
+    color:'#06b6d4'
+  },
+  '② Hierarchical Clustering':{
+    icon:'🌳',
+    what:'Algorithms that build a complete tree of nested clusters (a dendrogram) by progressively merging or splitting groups. No K required upfront — the full tree reveals natural structure at every scale of granularity. Also includes dimensionality reduction (PCA).',
+    analogy:'Like a family tree for your data. Every point starts as its own "individual." The two most similar merge into a "family." Families merge into "clans." The full tree records every level of relatedness — you choose where to cut to get the grouping you want.',
+    color:'#8b5cf6'
+  },
+
+  /* ── ML: REINFORCEMENT LEARNING ──────────────────────────────── */
+  '① Value-Based Methods':{
+    icon:'💰',
+    what:'RL algorithms that learn by estimating the long-term value of being in a state, or of taking an action in a state. The agent acts by always choosing the highest-value option. Works best with discrete action spaces.',
+    analogy:'A chess player who memorises the expected score of every board position. To choose a move, they look up which resulting position has the highest estimated value — no intuition, just a lookup table (or neural network) of values.',
+    color:'#3b82f6'
+  },
+  '② Policy-Based Methods':{
+    icon:'🎭',
+    what:'RL algorithms that directly learn a policy — a mapping from states to actions — without maintaining a value table. They optimise behaviour through gradient ascent on expected reward. Excels at continuous action spaces like robotics and language models.',
+    analogy:'A tennis player who develops muscle memory through thousands of rallies. They don\'t calculate the "value" of each possible swing — they\'ve directly learned the right action for each situation. The policy IS the learned reflex.',
+    color:'#f59e0b'
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ③  COMPATIBILITY MATRIX  —  COMPAT lookup for non-connected node pairs
+//    Keys: 'id1|id2'  |  Both orderings checked in getCompat()
+// ═══════════════════════════════════════════════════════════════
+const COMPAT = {
+  'customer_request|platform_db':{ok:false,
+    why:'Customer requests flow through the Edge (Envoy) and never directly touch the platform database. DynamoDB stores infrastructure metadata — not customer data.',
+    analogy:'Like a restaurant customer trying to walk into the kitchen and read the inventory spreadsheet. Customers interact with waiters (Envoy), not the stock-management system (DynamoDB).',
+    need:['envoy_proxy','async_worker'],needExplain:'Route the request through Envoy Proxy (which routes it to a backend), and use the Async Worker pipeline for any database writes.'},
+  'customer_request|control_plane':{ok:false,
+    why:'The Control Plane manages infrastructure configuration, not customer traffic. These operate at completely different abstraction layers.',
+    analogy:'Like a customer calling the airport\'s ATC tower to book a flight. ATC talks to pilots (Envoy proxies), not passengers.',
+    need:['envoy_proxy'],needExplain:'All customer traffic enters through Envoy Proxy. The Control Plane indirectly shapes how Envoy handles that traffic, but there is no direct connection.'},
+  'customer_request|osb_broker':{ok:false,
+    why:'The Open Service Broker is an internal-only developer API. It should never be exposed to or called by customer requests.',
+    analogy:'Like a restaurant customer trying to use the staff-only ordering terminal in the kitchen. That system is for chefs, not diners.',
+    need:['envoy_proxy'],needExplain:'Customer requests enter through Envoy Proxy, which routes them to the appropriate backend microservice.'},
+  'customer_request|cloudformation':{ok:false,
+    why:'CloudFormation manages infrastructure provisioning. A customer request should never interact with the IaC layer.',
+    analogy:'Like a hotel guest trying to modify the building\'s architectural blueprints. Guests interact with front desk (Envoy), not construction plans.',
+    need:['envoy_proxy','backend_microservice'],needExplain:'Customer traffic flows Envoy → Backend Microservice. CloudFormation only matters at infrastructure build time, not at request time.'},
+  'backend_microservice|platform_db':{ok:false,
+    why:'The platform DB stores infrastructure metadata managed by the OSB worker pipeline, not business data. Backend services should not read this directly.',
+    analogy:'Like your food delivery app reading the restaurant\'s ingredient inventory system. Your app just needs the order status — not the supply chain data.',
+    need:['control_plane'],needExplain:'The Control Plane mediates access to platform state. Backend services should expose their own databases via their own APIs.'},
+  'backend_microservice|sqs_queue':{ok:true,
+    why:'A backend microservice can publish events or tasks to SQS for asynchronous processing — a standard microservices pattern.',
+    analogy:'Like a chef placing a dirty-dishes order in the dishwasher queue. Each staff member focuses on their own job and communicates via the queue.',
+    need:[],needExplain:''},
+  'developer|envoy_proxy':{ok:false,
+    why:'Developers interact with the system via the Open Service Broker API, not by configuring Envoy proxies directly. Envoy is a runtime infrastructure component.',
+    analogy:'Like a chef writing recipes (config) but not operating the delivery trucks (Envoy). The recipe goes through the kitchen system before reaching the truck.',
+    need:['osb_broker','sqs_queue','async_worker','control_plane'],needExplain:'Developer config → OSB → SQS → Worker → DynamoDB → Control Plane → Config Engine → Envoy. It\'s an intentional multi-step pipeline.'},
+  'developer|platform_db':{ok:false,
+    why:'Developers must never write directly to the platform database. All writes go through the OSB → Worker pipeline to ensure validation and consistency.',
+    analogy:'Like a bank employee trying to edit the core ledger directly rather than using the official transaction system. Every change must go through the proper process.',
+    need:['osb_broker','sqs_queue','async_worker'],needExplain:'The full provisioning pipeline validates and processes requests before anything is written to DynamoDB.'},
+  'auth_sidecar|platform_db':{ok:false,
+    why:'The AuthN Sidecar only performs edge authentication checks. It has no reason to access platform state data — these are completely separate concerns.',
+    analogy:'The security guard at the door doesn\'t need to read the company\'s financial records to verify your ID badge.',
+    need:[],needExplain:'These components are intentionally decoupled. Auth happens at the edge; platform state is an internal infrastructure concern.'},
+  'rate_sidecar|auth_sidecar':{ok:true,
+    why:'Both sidecars are designed to work together alongside Envoy Proxy. They handle separate cross-cutting concerns without interfering.',
+    analogy:'Like having both a ticket checker AND a security scanner at a venue entrance. They work in parallel on different aspects of the same check.',
+    need:['envoy_proxy'],needExplain:'Both sidecars attach to the Envoy container. Envoy orchestrates calling each in sequence: Auth first, then Rate-Limit, then route to backend.'},
+  'cloudfront|envoy_proxy':{ok:true,
+    why:'CloudFront (CDN) can sit in front of Envoy as a caching and DDoS protection layer — this is a valid and common production pattern.',
+    analogy:'CloudFront handles the "last mile" caching (like a post office sorting facility near your home). Envoy handles intelligent routing behind it.',
+    need:[],needExplain:''},
+  'route53|envoy_proxy':{ok:true,
+    why:'Route53 DNS resolves domain names to Envoy proxy IPs. This is the standard entry point to the Edge Fleet.',
+    analogy:'Route53 is the phone directory mapping "jira.atlassian.com" to the actual IP address of the nearest Envoy proxy.',
+    need:[],needExplain:''},
+  'osb_broker|envoy_proxy':{ok:false,
+    why:'The OSB manages infrastructure provisioning (build time). Envoy handles live traffic routing (run time). They serve completely different phases.',
+    analogy:'The architect who designs the road (OSB) and the traffic officer who manages cars on it (Envoy) have different jobs in different phases.',
+    need:['async_worker','platform_db','control_plane','config_engine'],needExplain:'OSB writes intent → DynamoDB stores it → Control Plane reads it → Config Engine generates Envoy rules. It\'s an indirect, eventual chain.'},
+  'config_engine|cloudformation':{ok:true,
+    why:'Both serve the Envoy fleet but at different layers: CloudFormation creates the EC2 infrastructure, Config Engine provides the routing configuration that runs on it.',
+    analogy:'CloudFormation builds the physical server (the hardware), Config Engine programs what the software on that server should do (Envoy routing rules).',
+    need:['envoy_proxy'],needExplain:''},
+  'developer|customer_request':{ok:false,
+    why:'These are two completely different users of the system. Developers manage infrastructure; customers use Atlassian products. They interact through completely different paths.',
+    analogy:'The chef who designs the restaurant and the diner eating there are both "users" of the restaurant, but they interact through entirely different systems.',
+    need:[],needExplain:'The developer interacts with the OSB pipeline. The customer interacts with Envoy. They should not share a path.'}
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ④  LAYOUT CONSTANTS  (see also CONFIG object defined below)
+//    col_width=260, card_width=200  → horizontal gap = 60px
+//    row_height=190, card_height=112 → vertical gap   = 78px
+// ═══════════════════════════════════════════════════════════════
+const BW=200, BH=112;
+const COL_W=260, ROW_H=190, OX=80, OY=80;
+// pos.x / pos.y → direct column/row index (0-based)
+const BLOCKS = BLOCKS_DATA.map(b => ({
+  ...b,
+  px: b.pos.x * COL_W + OX,
+  py: b.pos.y * ROW_H + OY
+}));
+const BY_ID = Object.fromEntries(BLOCKS.map(b => [b.id, b]));
+
+// ═══════════════════════════════════════════════════════════════
+// ④·b  CONFIG  —  all layout + animation numbers in one place.
+//       Contributors: tweak these to change card sizes, column
+//       spacing, zoom limits, and edge animation speed.
+// ═══════════════════════════════════════════════════════════════
+const CONFIG = {
+  // Card dimensions (SVG units)
+  CARD_W:        200,   // BW — card width
+  CARD_H:        112,   // BH — card height
+  CARD_RADIUS:   11,    // SVG rx — card corner radius
+
+  // Grid stride — distance from one card's top-left to the next
+  COL_W:         260,   // horizontal distance between columns
+  ROW_W:         190,   // vertical distance between rows
+  ORIGIN_X:      80,    // canvas left margin before first column
+  ORIGIN_Y:      80,    // canvas top margin before first row
+
+  // Group band padding (extra space around section boxes)
+  GROUP_PAD:     18,
+
+  // Zoom limits
+  ZOOM_MIN:      0.12,
+  ZOOM_MAX:      3.0,
+  ZOOM_STEP:     0.12,
+
+  // Panel
+  PANEL_W:       320,   // detail/compat panel width in px
+  PANEL_PAD:     14,    // gap between card edge and panel
+
+  // Edge animation
+  EDGE_DASH:     '10 5',
+  EDGE_ANIM_DURATION: '2s',
+  EDGE_ANIM_STAGGER:  0.28,  // seconds between successive edge animations
+
+  // Drag detection: movement under this threshold = click, not drag
+  DRAG_THRESHOLD: 3,
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// ⑤  SVG UTILITIES  —  svgE() factory, canvas + viewport refs, arrow markers
+// ═══════════════════════════════════════════════════════════════
+const NS = 'http://www.w3.org/2000/svg';
+const svgE = (tag, attrs={}, txt) => {
+  const e = document.createElementNS(NS, tag);
+  for (const [k,v] of Object.entries(attrs)) e.setAttribute(k,v);
+  if (txt !== undefined) e.textContent = txt;
+  return e;
+};
+const canvas = document.getElementById('cv');
+const viewport = document.getElementById('viewport');
+
+// Arrow markers
+const defs = svgE('defs');
+for (const [type, clr] of Object.entries(CCLR)) {
+  const mk = svgE('marker',{id:'mk-'+type,markerWidth:'8',markerHeight:'8',refX:'7',refY:'3',orient:'auto'});
+  mk.appendChild(svgE('path',{d:'M0,0 L0,6 L8,3 z',fill:clr}));
+  defs.appendChild(mk);
+}
+canvas.insertBefore(defs, canvas.firstChild);
+
+// ═══════════════════════════════════════════════════════════════
+// ⑥  EDGE ROUTING  —  routeEdge() computes orthogonal L-shaped paths
+// ═══════════════════════════════════════════════════════════════
+/**
+ * Computes an orthogonal (L-shaped) SVG path between two card centres.
+ * Prefers horizontal exit when dx ≥ dy*0.65, otherwise exits vertically.
+ *
+ * @param {Object} from - source block (must have .px, .py)
+ * @param {Object} to   - target block (must have .px, .py)
+ * @returns {{ d, x1, y1, x2, y2, mx, my }}
+ *   d  = SVG path string  |  x1,y1 = start point  |  x2,y2 = end point
+ *   mx,my = midpoint for edge label placement
+ */
+function routeEdge(from, to) {
+  const fcx=from.px+BW/2, fcy=from.py+BH/2;
+  const tcx=to.px+BW/2,   tcy=to.py+BH/2;
+  const dx=tcx-fcx, dy=tcy-fcy;
+  const adx=Math.abs(dx), ady=Math.abs(dy);
+  let x1,y1,x2,y2;
+  if (adx >= ady*0.65) {
+    x1=dx>0?from.px+BW:from.px; y1=fcy;
+    x2=dx>0?to.px:to.px+BW;     y2=tcy;
+  } else {
+    x1=fcx; y1=dy>0?from.py+BH:from.py;
+    x2=tcx; y2=dy>0?to.py:to.py+BH;
+  }
+  let d;
+  if (adx >= ady*0.65) {
+    const mx=(x1+x2)/2;
+    d=Math.abs(y1-y2)<2?`M${x1},${y1}H${x2}`:`M${x1},${y1}H${mx}V${y2}H${x2}`;
+  } else {
+    const my=(y1+y2)/2;
+    d=Math.abs(x1-x2)<2?`M${x1},${y1}V${y2}`:`M${x1},${y1}V${my}H${x2}V${y2}`;
+  }
+  return {d, x1, y1, x2, y2, mx:(x1+x2)/2, my:(y1+y2)/2};
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ⑦  TEXT WRAP  —  wrap() splits labels across SVG text lines
+// ═══════════════════════════════════════════════════════════════
+const wrap = (text, max) => {
+  const words=text.split(' '), lines=[];
+  let cur='';
+  for (const w of words) {
+    const next=cur?cur+' '+w:w;
+    if (next.length<=max){cur=next}else{if(cur)lines.push(cur);cur=w}
+  }
+  if(cur)lines.push(cur);
+  return lines;
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ⑧  BUILD GROUPS  —  buildGroups() renders section band backgrounds
+// ═══════════════════════════════════════════════════════════════
+const groupsLayer = svgE('g',{id:'groups'});
+viewport.appendChild(groupsLayer);
+
+/**
+ * Renders all group band backgrounds into `groupsLayer`.
+ * Each band is a <g class="group-g"> containing a coloured <rect>
+ * and a label. Clicking the band (not a card inside it) opens the
+ * section info panel via showGroupPanel().
+ *
+ * Reads: GROUPS, BY_ID  |  Writes: groupsLayer DOM
+ */
+function buildGroups() {
+  groupsLayer.innerHTML='';
+  const PAD=18;
+  for (const grp of GROUPS) {
+    const members = grp.ids.map(id=>BY_ID[id]).filter(Boolean);
+    if (!members.length) continue;
+    const xs=members.map(b=>b.px), ys=members.map(b=>b.py);
+    const x0=Math.min(...xs)-PAD, y0=Math.min(...ys)-PAD;
+    const x1=Math.max(...xs)+BW+PAD, y1=Math.max(...ys)+BH+PAD;
+    const g=svgE('g',{class:'group-g'});
+    // Store group center in canvas-space for panel positioning
+    g._grp=grp;
+    g._cx=(x0+x1)/2; g._cy=(y0+y1)/2;
+    g._cw=(x1-x0); g._ch=(y1-y0);
+    const band=svgE('rect',{x:x0,y:y0,width:x1-x0,height:y1-y0,rx:'16',
+      class:'group-band',fill:grp.color,stroke:grp.color});
+    g.appendChild(band);
+    // Label — slightly inside the top-left of the band
+    const lbl=svgE('text',{x:x0+12,y:y0+16,
+      style:`font-size:9.5px;font-weight:800;fill:${grp.color};opacity:.85;font-family:Inter,sans-serif;pointer-events:none`},
+      GROUP_INFO[grp.label]?.icon+' '+grp.label);
+    g.appendChild(lbl);
+    g.addEventListener('click', e=>{
+      if(e.target.closest('.node')) return; // let card clicks through
+      e.stopPropagation();
+      showGroupPanel(g._grp, g._cx, g._cy, g._cw, g._ch);
+    });
+    groupsLayer.appendChild(g);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ⑨  BUILD EDGES  —  buildEdges() renders animated connection paths
+// ═══════════════════════════════════════════════════════════════
+const edgesLayer = svgE('g',{id:'edges'});
+viewport.appendChild(edgesLayer);
+
+/**
+ * Renders all connection edges into `edgesLayer`.
+ * Each edge is three SVG elements: shadow path, animated dashed line,
+ * and a pulsing source dot. Edge type determines colour and arrowhead.
+ *
+ * Reads: BLOCKS, BY_ID, CCLR, CLBL  |  Writes: edgesLayer DOM
+ */
+function buildEdges() {
+  edgesLayer.innerHTML='';
+  let idx=0;
+  for (const from of BLOCKS) {
+    for (const {t,c} of from.conns) {
+      const to=BY_ID[t]; if(!to) continue;
+      const clr=CCLR[c]??'#94a3b8', lbl=CLBL[c]??c;
+      const {d,x1,y1,x2,y2,mx,my}=routeEdge(from,to);
+      const delay=`${(idx*0.28)%3}s`; idx++;
+      const g=svgE('g',{class:'edge-group'});
+      g.appendChild(svgE('path',{d,class:'e-shadow'}));
+      const line=svgE('path',{d,class:'e-line'+(c==='asynchronous_task'?' async-conn':''),
+        stroke:clr,'marker-end':`url(#mk-${c})`});
+      line.style.animationDelay=delay;
+      g.appendChild(line);
+      const dot=svgE('circle',{cx:x1,cy:y1,r:'4',class:'e-src',stroke:clr});
+      dot.style.animationDelay=delay;
+      g.appendChild(dot);
+      g.appendChild(svgE('text',{x:mx,y:my-7,class:'e-lbl'},lbl));
+      edgesLayer.appendChild(g);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ⑩  BUILD CARDS  —  buildCards() renders all draggable node cards
+// ═══════════════════════════════════════════════════════════════
+const cardsLayer = svgE('g',{id:'cards'});
+viewport.appendChild(cardsLayer);
+const CARD_ELS={};
+
+function addTags(g,meta,yBase){
+  let x=12;
+  for(const tag of meta.tags){
+    const w=Math.round(tag.length*5.2+13);
+    if(x+w>BW-10)break;
+    g.appendChild(svgE('rect',{x,y:yBase,width:w,height:14,rx:'6',fill:meta.tBg}));
+    g.appendChild(svgE('text',{x:x+w/2,y:yBase+8,class:'tag-t',fill:meta.tFg},tag));
+    x+=w+3;
+  }
+}
+
+/**
+ * Renders all node cards into `cardsLayer`.
+ * Each card is a draggable <g class="node"> containing a card rect,
+ * status dot, title text, description text, a divider, tag pills,
+ * and an optional connection-count badge.
+ *
+ * Reads: BLOCKS, getVMETA()  |  Writes: cardsLayer DOM, CARD_ELS map
+ */
+function buildCards(){
+  cardsLayer.innerHTML='';
+  for(const b of BLOCKS){
+    const m=getVMETA(b.id)??{dot:'#94a3b8',tBg:'#f1f5f9',tFg:'#475569',tags:[]};
+    const g=svgE('g',{class:'node',transform:`translate(${b.px},${b.py})`});
+    g.dataset.id=b.id;
+    // card body
+    g.appendChild(svgE('rect',{width:BW,height:BH,rx:'11',
+      class:'card-rect'+(m.dashed?' dashed':'')}));
+    // status dot
+    g.appendChild(svgE('circle',{cx:'14',cy:'18',r:'5.5',fill:m.dot}));
+    // title
+    const tLines=wrap(b.label,21);
+    const nT=Math.min(tLines.length,2);
+    tLines.slice(0,2).forEach((ln,i)=>
+      g.appendChild(svgE('text',{x:'26',y:String(22+i*13),class:'c-label'},ln)));
+    // desc
+    const descY0=22+nT*13+6;
+    wrap(b.desc,33).slice(0,2).forEach((ln,i)=>
+      g.appendChild(svgE('text',{x:'12',y:String(descY0+i*10.5),class:'c-desc'},ln)));
+    // divider
+    const divY=BH-26;
+    g.appendChild(svgE('line',{x1:'12',y1:String(divY),x2:String(BW-12),y2:String(divY),class:'c-divider'}));
+    // tags
+    addTags(g,m,BH-20);
+    // badge
+    if(b.conns.length>0){
+      g.appendChild(svgE('circle',{cx:String(BW-16),cy:'13',r:'9',class:'badge-bg'}));
+      g.appendChild(svgE('text',{x:String(BW-16),y:'13',class:'badge-t'},String(b.conns.length)));
+    }
+    // drag + click events (set in event handlers section)
+    g.addEventListener('mousedown', e=>onCardMouseDown(e,b));
+    CARD_ELS[b.id]=g;
+    cardsLayer.appendChild(g);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ⑪  SELECTION  —  pickBlock(), highlightTwo(), clearSel(), _resetSelState()
+// ═══════════════════════════════════════════════════════════════
+let selId=null, compId=null, compatMode=false;
+// tracks which canvas-space reference point the open panel is anchored to
+let openPanelRef=null; // {px, py, cw, ch}
+
+function toggleCompatMode(){
+  compatMode=!compatMode;
+  document.getElementById('compat-btn').classList.toggle('active-btn',compatMode);
+  const bar=document.getElementById('mode-bar');
+  if(compatMode){
+    bar.className='compat-mode';
+    bar.textContent='⚡ Compatibility Mode — click any first card, then a second card to check compatibility';
+  } else {
+    bar.className='hidden';
+    clearSel();
+  }
+}
+
+/**
+ * Handles a card click. Behaviour depends on current selection state:
+ *   • No selection       → select this card, fade others, show detail panel
+ *   • Same card clicked  → deselect (clearSel)
+ *   • Different card     → run compatibility check, show compat panel
+ *
+ * Also called from flow-chip clicks inside the detail panel.
+ *
+ * @param {string} id - block id
+ */
+function pickBlock(id){
+  if(selId===id){clearSel();return;}
+  if(selId && selId!==id){
+    // Second card → compatibility check
+    compId=id;
+    highlightTwo(selId,id);
+    showCompatPanel(selId,id);
+    return;
+  }
+  // First card
+  selId=id; compId=null;
+  const b=BY_ID[id];
+  const outIds=b.conns.map(c=>c.t);
+  const inIds=BLOCKS.filter(bl=>bl.conns.some(c=>c.t===id)).map(bl=>bl.id);
+  const live=new Set([id,...outIds,...inIds]);
+  for(const bl of BLOCKS){
+    CARD_ELS[bl.id]?.classList.toggle('active',bl.id===id);
+    CARD_ELS[bl.id]?.classList.toggle('faded',!live.has(bl.id));
+  }
+  if(!compatMode){
+    const bar=document.getElementById('mode-bar');
+    bar.className='';
+    bar.textContent=`📍 "${b.label}" selected — click ANY other card (even faded ones) to check compatibility, or click empty space to deselect`;
+  }
+  showDetailPanel(b);
+}
+
+function highlightTwo(id1,id2){
+  for(const bl of BLOCKS){
+    const el=CARD_ELS[bl.id];
+    el?.classList.remove('active','active2','faded');
+    if(bl.id===id1) el?.classList.add('active');
+    else if(bl.id===id2) el?.classList.add('active2');
+    else el?.classList.add('faded');
+  }
+}
+
+function _resetSelState(){
+  selId=null; compId=null; openPanelRef=null;
+  for(const el of Object.values(CARD_ELS)) el?.classList.remove('active','active2','faded');
+  if(!compatMode) document.getElementById('mode-bar').className='hidden';
+}
+function clearSel(){
+  _resetSelState();
+  panel.classList.remove('open');
+}
+canvas.addEventListener('click', e=>{
+  if(e.target.closest('.node')) return;    // card click — handled by card
+  if(e.target.closest('.group-g')) return; // group click — handled by group
+  clearSel();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// ⑫  DETAIL PANEL  —  positionPanel(), _openPanel(), showDetailPanel()
+// ═══════════════════════════════════════════════════════════════
+const panel=document.getElementById('panel');
+
+// px,py = canvas-space top-left of reference rect; cw,ch = canvas-space size
+/**
+ * Positions the detail panel near its reference card, trying four
+ * positions in order: right → left → below → above.
+ * Uses actual rendered panel height (getBoundingClientRect) so the
+ * panel is never clipped. Final safety-clamp keeps it fully in-viewport.
+ *
+ * Called once on open (via requestAnimationFrame in _openPanel) and
+ * again on every pan/zoom frame via applyXform() to follow the card.
+ *
+ * @param {number} px  - canvas-space X of reference rect top-left
+ * @param {number} py  - canvas-space Y of reference rect top-left
+ * @param {number} cw  - canvas-space width  of reference rect (default: BW)
+ * @param {number} ch  - canvas-space height of reference rect (default: BH)
+ */
+function positionPanel(px, py, cw=BW, ch=BH){
+  const wrapEl=document.getElementById('wrap');
+  const W=wrapEl.clientWidth, H=wrapEl.clientHeight;
+  const PW=320, PAD=14;
+  // Use actual rendered panel height (after content is set); fall back to estimate
+  const rawH=panel.getBoundingClientRect().height;
+  const PH=Math.min(rawH>20?rawH:480, H-20);
+  // Convert canvas coords → screen coords
+  const sx=px*sc+tx, sy=py*sc+ty;
+  const sw=cw*sc, sh=ch*sc;
+  const clamp=(v,mn,mx)=>Math.max(mn,Math.min(v,mx));
+  let left,top;
+  // Try: right of card
+  if(sx+sw+PAD+PW<=W-8){left=sx+sw+PAD; top=clamp(sy,8,H-PH-8);}
+  // Try: left of card
+  else if(sx-PAD-PW>=8){left=sx-PAD-PW; top=clamp(sy,8,H-PH-8);}
+  // Try: below card
+  else if(sy+sh+PAD+PH<=H-8){top=sy+sh+PAD; left=clamp(sx+sw/2-PW/2,8,W-PW-8);}
+  // Fallback: above card
+  else{top=clamp(sy-PAD-PH,8,H-PH-8); left=clamp(sx+sw/2-PW/2,8,W-PW-8);}
+  // Final safety clamp — always keep panel fully inside viewport
+  left=clamp(left,8,W-PW-8);
+  top =clamp(top,8,H-PH-8);
+  panel.style.left=left+'px'; panel.style.top=top+'px'; panel.style.right='auto';
+}
+
+/**
+ * Opens the detail panel off-screen, then positions it after one
+ * browser paint so getBoundingClientRect() returns the real height.
+ * Stores the canvas-space reference in openPanelRef for live
+ * repositioning during pan/zoom (see applyXform).
+ *
+ * @param {number} px  - canvas-space X of anchor rect
+ * @param {number} py  - canvas-space Y of anchor rect
+ * @param {number} cw  - canvas-space width  (default: BW)
+ * @param {number} ch  - canvas-space height (default: BH)
+ */
+function _openPanel(px, py, cw=BW, ch=BH){
+  openPanelRef={px,py,cw,ch};
+  panel.style.left='-9999px';       // hide off-screen while content renders
+  panel.classList.add('open');
+  // After one paint the browser knows the panel height → position correctly
+  requestAnimationFrame(()=>positionPanel(px,py,cw,ch));
+}
+
+/**
+ * Fills the panel with full node information and opens it near the card.
+ * Sections rendered: badge, title, desc, plain-English analogy, data
+ * flow chips, technical details, use cases, tools (ML views), connections.
+ *
+ * @param {Object} b - block object from BLOCKS / BY_ID
+ */
+function showDetailPanel(b){
+  const m=getVMETA(b.id)??{};
+  // Build flow chips (connected nodes)
+  const outConns=b.conns;
+  const inConns=BLOCKS.filter(bl=>bl.conns.some(c=>c.t===b.id))
+    .map(bl=>({from:bl, conn:bl.conns.find(c=>c.t===b.id)}));
+
+  let html=`
+    <span class="p-badge" style="background:${m.tBg||'#f1f5f9'};color:${m.tFg||'#475569'};border:1px solid ${m.tBg||'#e2e8f0'}">
+      <span style="width:8px;height:8px;border-radius:50%;background:${m.dot||'#94a3b8'};display:inline-block"></span>
+      ${b.id.replace(/_/g,' ')}
+    </span>
+    <h2>${b.label}</h2>
+    <p class="p-desc">${b.desc}</p>`;
+
+  // Simple explanation (the analogy)
+  html+=`<hr/><h3>💡 Plain-English Explanation</h3>
+    <div class="p-simple">${b.simple}</div>`;
+
+  // Connection flow
+  if(inConns.length||outConns.length){
+    html+=`<hr/><h3>🔗 Data Flow</h3><div class="p-flow">`;
+    for(const {from,conn} of inConns){
+      const clr=CCLR[conn.c]??'#94a3b8';
+      html+=`<span class="flow-chip" onclick="pickBlock('${from.id}')" style="background:${clr}18;color:${clr};border-color:${clr}40">${from.label}</span>
+             <span class="flow-arrow">→</span>`;
+    }
+    html+=`<span class="flow-chip" style="background:#0052cc18;color:#0052cc;border-color:#0052cc40;font-weight:800">${b.label}</span>`;
+    for(const {t,c} of outConns){
+      const to=BY_ID[t]; if(!to) continue;
+      const clr=CCLR[c]??'#94a3b8';
+      html+=`<span class="flow-arrow">→</span>
+             <span class="flow-chip" onclick="pickBlock('${t}')" style="background:${clr}18;color:${clr};border-color:${clr}40">${to.label}</span>`;
+    }
+    html+=`</div>`;
+  }
+
+  // Technical detail
+  html+=`<hr/><h3>🔧 Technical Details</h3><p class="p-detail">${b.detail}</p>`;
+
+  // Use cases
+  if(b.useCases?.length){
+    html+=`<hr/><h3>🌍 Real-World Use Cases</h3>`;
+    for(const uc of b.useCases) html+=`<div class="p-usecase-item">${uc}</div>`;
+  }
+
+  // Tools (ML views have this field)
+  if(b.tools?.length){
+    html+=`<hr/><h3>🛠 Recommended Tools</h3><div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px">`;
+    for(const t of b.tools)
+      html+=`<span class="tool-chip">${t}</span>`;
+    html+=`</div>`;
+  }
+
+  // Connections list
+  if(b.conns.length){
+    html+=`<hr/><h3>⬡ Connections (${b.conns.length})</h3><ul class="p-connlist">`;
+    for(const {t,c} of b.conns){
+      const clr=CCLR[c]??'#94a3b8';
+      html+=`<li><span class="cdot" style="background:${clr}"></span>
+             <span><strong>→ ${(BY_ID[t]?.label||t).replace(/_/g,' ')}</strong> <em style="color:#94a3b8">· ${CLBL[c]||c}</em></span></li>`;
+    }
+    html+=`</ul>`;
+  }
+
+  // Tags
+  if(m.tags?.length){
+    html+=`<hr/><div>`;
+    for(const tag of m.tags)
+      html+=`<span class="p-tag-chip" style="background:${m.tBg};color:${m.tFg}">${tag}</span>`;
+    html+=`</div>`;
+  }
+
+  html+=`<hr/><p style="font-size:.62rem;color:#94a3b8;text-align:center">
+    💡 Click another card to check compatibility</p>`;
+
+  document.getElementById('p-content').innerHTML=html;
+  _openPanel(b.px, b.py);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ⑬  COMPATIBILITY PANEL  —  getCompat(), showCompatPanel(), closePanel()
+// ═══════════════════════════════════════════════════════════════
+function getCompat(id1,id2){
+  const b1=BY_ID[id1], b2=BY_ID[id2];
+  // Directly connected?
+  const dc=b1.conns.find(c=>c.t===id2)||b2.conns.find(c=>c.t===id1);
+  if(dc) return {ok:true,
+    why:`These are directly connected in the architecture via <strong>${CLBL[dc.c]||dc.c}</strong>.`,
+    analogy:`This connection is part of Vasilios's designed data flow — it's intentional and expected.`,
+    need:[],needExplain:''};
+  return COMPAT[`${id1}|${id2}`]||COMPAT[`${id2}|${id1}`]||{ok:null,
+    why:'No specific compatibility data for this pairing. These components operate at different layers with no defined direct relationship in this architecture.',
+    analogy:'These two pieces don\'t typically need to communicate directly.',
+    need:[],needExplain:''};
+}
+
+/**
+ * Fills the panel with a compatibility report for two selected nodes.
+ * Resolves via getCompat() which checks direct connections first,
+ * then the COMPAT lookup table (both orderings), then falls back to
+ * a generic "no data" message.
+ *
+ * @param {string} id1 - first selected block id
+ * @param {string} id2 - second selected block id
+ */
+function showCompatPanel(id1,id2){
+  const b1=BY_ID[id1], b2=BY_ID[id2];
+  const m1=VMETA[id1]??{}, m2=VMETA[id2]??{};
+  const c=getCompat(id1,id2);
+  const okIcon=c.ok===true?'✅':c.ok===false?'❌':'⚠️';
+  const okText=c.ok===true?'Compatible':'Not Directly Compatible';
+  const badgeCls=c.ok===true?'compat-ok':'compat-no';
+
+  let html=`
+    <div class="compat-header">
+      <span style="font-size:.75rem;font-weight:700;color:#0f172a">${b1.label}</span>
+      <span class="compat-arrow">↔</span>
+      <span style="font-size:.75rem;font-weight:700;color:#0f172a">${b2.label}</span>
+    </div>
+    <div class="compat-badge ${badgeCls}">${okIcon} ${okText}</div>
+    <h3>📖 Technical Reason</h3>
+    <p class="p-detail">${c.why}</p>
+    <h3>💡 Simple Analogy</h3>
+    <div class="analogy-box"><strong>Think of it like this:</strong> ${c.analogy}</div>`;
+
+  if(c.ok===false && c.need?.length){
+    html+=`<hr/><h3>🔧 To Make Them Work Together, Add:</h3>`;
+    for(const nid of c.need){
+      const nb=BY_ID[nid];
+      if(!nb) continue;
+      const nm=VMETA[nid]??{};
+      html+=`<span class="need-chip" onclick="pickBlock('${nid}')">
+        <span style="width:6px;height:6px;border-radius:50%;background:${nm.dot||'#8b5cf6'};display:inline-block"></span>
+        ${nb.label}</span>`;
+    }
+    if(c.needExplain) html+=`<p class="p-detail" style="margin-top:7px">${c.needExplain}</p>`;
+  }
+  if(c.ok===true&&c.needExplain){
+    html+=`<hr/><h3>💬 Notes</h3><p class="p-detail">${c.needExplain}</p>`;
+  }
+
+  html+=`<hr/><button onclick="clearSel()" style="width:100%;padding:6px;border-radius:7px;
+    border:1px solid #e2e8f0;background:#f8fafc;cursor:pointer;font-size:.7rem;color:#64748b">
+    ✕ Close</button>`;
+
+  document.getElementById('p-content').innerHTML=html;
+  // Position near the midpoint between the two cards
+  const midPx=(b1.px+b2.px)/2, midPy=(b1.py+b2.py)/2;
+  _openPanel(midPx, midPy);
+}
+
+function closePanel(){
+  panel.classList.remove('open');
+  _resetSelState();
+}
+
+// ── Section / Group band panel ─────────────────────────────
+/**
+ * Fills the panel with section (group band) information and opens it
+ * centred on the band. Uses GROUP_INFO[grp.label] for content.
+ * Suppresses the "Why does this section exist?" block in ML views
+ * (isMLSection check).
+ *
+ * @param {Object} grp       - group object {label, ids[], color}
+ * @param {number} cx        - band centre X in canvas space
+ * @param {number} cy        - band centre Y in canvas space
+ * @param {number} cw        - band width  in canvas space
+ * @param {number} ch        - band height in canvas space
+ */
+function showGroupPanel(grp, cx, cy, cw, ch){
+  selId=null; compId=null;
+  for(const el of Object.values(CARD_ELS)) el?.classList.remove('active','active2','faded');
+  document.getElementById('mode-bar').className='hidden';
+
+  const info=GROUP_INFO[grp.label]||{};
+  const members=grp.ids.map(id=>BY_ID[id]).filter(Boolean);
+  const isMLSection = currentTab==='ml' && currentMLView!==null;
+  const sectionKind = isMLSection ? 'ML Section' : 'Architecture Section';
+
+  let html=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span style="font-size:1.4rem">${info.icon||'◧'}</span>
+      <div>
+        <div style="font-size:.62rem;font-weight:700;color:${grp.color};text-transform:uppercase;letter-spacing:.08em">${sectionKind}</div>
+        <h2 style="margin:0;padding:0;color:#0f172a">${grp.label.replace(/^[①②③④⑤]\s*/,'')}</h2>
+      </div>
+    </div>
+    <hr/>
+    <h3>🏛 What Is This Section?</h3>
+    <p class="p-desc">${info.what||''}</p>
+    <hr/>
+    ${!isMLSection?`<h3>🤔 Why Does This Section Exist?</h3>
+    <p class="p-detail">${info.why||''}</p>
+    <hr/>`:''}
+    <h3>💡 Simple Analogy</h3>
+    <div class="p-simple"><strong>Think of it like this:</strong> ${info.analogy||''}</div>
+    <hr/>
+    <h3>📦 Components (${members.length})</h3>
+    <ul class="p-connlist">`;
+
+  for(const b of members){
+    const m=getVMETA(b.id)??{};
+    html+=`<li style="cursor:pointer;padding:3px 0" onclick="pickBlock('${b.id}')">
+      <span class="cdot" style="background:${m.dot||grp.color}"></span>
+      <span><strong>${b.label}</strong><br>
+        <em style="color:#94a3b8;font-size:.67rem">${b.desc.length>65?b.desc.substring(0,65)+'…':b.desc}</em>
+      </span></li>`;
+  }
+
+  html+=`</ul><hr/>
+    <p style="font-size:.62rem;color:#94a3b8;text-align:center">
+      Click any component above to see its details</p>`;
+
+  document.getElementById('p-content').innerHTML=html;
+  _openPanel(cx - cw/2, cy - ch/2, cw, ch);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ⑭  LEGEND  —  rebuildLegend(), toggleLegend()
+// ═══════════════════════════════════════════════════════════════
+const lgndRows=document.getElementById('legend-rows');
+/**
+ * Clears and rebuilds the connection-type legend for the currently
+ * active view. Called after every view switch (activateViewData,
+ * restoreAtlassian) so the legend always matches the visible edges.
+ *
+ * Reads: CCLR, CLBL  |  Writes: #legend-rows DOM
+ */
+function rebuildLegend(){
+  lgndRows.innerHTML='';
+  for(const [type,clr] of Object.entries(CCLR)){
+    const d=document.createElement('div'); d.className='l-row';
+    d.innerHTML=`<span class="l-sw" style="background:${clr}"></span><span>${CLBL[type]||type}</span>`;
+    lgndRows.appendChild(d);
+  }
+}
+rebuildLegend();
+let lgndOn=true;
+function toggleLegend(){lgndOn=!lgndOn;document.getElementById('legend').style.display=lgndOn?'':'none';}
+
+// ═══════════════════════════════════════════════════════════════
+// ⑮  DRAG CARDS  +  PAN/ZOOM
+// ═══════════════════════════════════════════════════════════════
+let tx=0, ty=0, sc=1;
+let dragBlock=null, dragOrigPx=0, dragOrigPy=0, mouseX0=0, mouseY0=0, didDrag=false;
+let isPanning=false, panX0=0, panY0=0;
+
+/**
+ * Applies the current pan (tx, ty) and zoom (sc) transform to the SVG
+ * viewport. Also updates the zoom percentage display and, if a panel
+ * is open, repositions it to stay anchored to its card.
+ */
+function applyXform(){
+  viewport.setAttribute('transform',`translate(${tx},${ty}) scale(${sc})`);
+  document.getElementById('zoom-val').textContent=Math.round(sc*100)+'%';
+  if(openPanelRef && panel.classList.contains('open')){
+    positionPanel(openPanelRef.px, openPanelRef.py, openPanelRef.cw, openPanelRef.ch);
+  }
+}
+
+function onCardMouseDown(e,b){
+  e.stopPropagation();
+  dragBlock=b; dragOrigPx=b.px; dragOrigPy=b.py;
+  mouseX0=e.clientX; mouseY0=e.clientY; didDrag=false;
+  e.preventDefault();
+}
+
+canvas.addEventListener('mousedown',e=>{
+  if(e.target.closest('.node')) return;
+  isPanning=true; panX0=e.clientX; panY0=e.clientY;
+  canvas.classList.add('dragging');
+});
+
+window.addEventListener('mousemove',e=>{
+  if(dragBlock){
+    const dx=(e.clientX-mouseX0)/sc, dy=(e.clientY-mouseY0)/sc;
+    if(Math.abs(dx)>3||Math.abs(dy)>3){
+      didDrag=true;
+      dragBlock.px=dragOrigPx+dx; dragBlock.py=dragOrigPy+dy;
+      CARD_ELS[dragBlock.id]?.setAttribute('transform',`translate(${dragBlock.px},${dragBlock.py})`);
+      buildEdges(); buildGroups();
+    }
+  } else if(isPanning){
+    tx+=e.clientX-panX0; ty+=e.clientY-panY0;
+    panX0=e.clientX; panY0=e.clientY; applyXform();
+  }
+});
+
+window.addEventListener('mouseup',e=>{
+  if(dragBlock){
+    if(!didDrag) pickBlock(dragBlock.id);
+    dragBlock=null;
+  }
+  isPanning=false; canvas.classList.remove('dragging');
+});
+
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect();
+  const mx=e.clientX-r.left, my=e.clientY-r.top;
+  const old=sc;
+  sc=Math.min(3,Math.max(.12,sc+(e.deltaY>0?-.09:.09)));
+  tx=mx-(mx-tx)*(sc/old); ty=my-(my-ty)*(sc/old);
+  applyXform();
+},{passive:false});
+
+// ── TOUCH: pan (1 finger) + pinch-to-zoom (2 fingers) ───────────
+let _t1=null,_t2=null,_pinchD0=0,_ptx0=0,_pty0=0,_psc0=1;
+function _touchDist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);}
+function _touchMid(a,b){return{x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2};}
+
+canvas.addEventListener('touchstart',e=>{
+  if(e.target.closest('.node')) return;   // let node tap fall through
+  e.preventDefault();
+  if(e.touches.length===1){
+    _t1=e.touches[0]; _t2=null;
+    panX0=_t1.clientX; panY0=_t1.clientY; isPanning=true;
+  } else if(e.touches.length===2){
+    isPanning=false;
+    _t1=e.touches[0]; _t2=e.touches[1];
+    _pinchD0=_touchDist(_t1,_t2);
+    _ptx0=tx; _pty0=ty; _psc0=sc;
+  }
+},{passive:false});
+
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length===1 && isPanning){
+    const t=e.touches[0];
+    tx+=t.clientX-panX0; ty+=t.clientY-panY0;
+    panX0=t.clientX; panY0=t.clientY; applyXform();
+  } else if(e.touches.length===2){
+    const a=e.touches[0],b=e.touches[1];
+    const d=_touchDist(a,b);
+    const ratio=d/_pinchD0;
+    const mid=_touchMid(a,b);
+    const r=canvas.getBoundingClientRect();
+    const mx=mid.x-r.left, my=mid.y-r.top;
+    const newSc=Math.min(3,Math.max(.12,_psc0*ratio));
+    tx=mx-(mx-_ptx0)*(newSc/_psc0);
+    ty=my-(my-_pty0)*(newSc/_psc0);
+    sc=newSc; applyXform();
+  }
+},{passive:false});
+
+canvas.addEventListener('touchend',e=>{
+  if(e.touches.length===0){ isPanning=false; _t1=null; _t2=null; }
+});
+
+// Node tap-to-open on touch
+canvas.addEventListener('touchend',e=>{
+  if(e.changedTouches.length===1 && !didDrag){
+    const t=e.changedTouches[0];
+    const el=document.elementFromPoint(t.clientX,t.clientY)?.closest('.node');
+    if(el){
+      const bid=el.dataset.id;
+      if(bid) pickBlock(bid);
+    }
+  }
+  didDrag=false;
+},{passive:true});
+
+function doZoom(dir){sc=Math.min(3,Math.max(.12,sc+dir*.12));applyXform();}
+
+// ═══════════════════════════════════════════════════════════════
+// ⑯  FIT ALL  —  fitAll() auto-scales to show all nodes
+// ═══════════════════════════════════════════════════════════════
+/**
+ * Auto-fits all visible nodes into the canvas viewport with padding.
+ * Computes the bounding box of all BLOCKS, scales to fill the canvas,
+ * and centres the result. Updates tx, ty, sc then calls applyXform().
+ */
+function fitAll(){
+  const wrapEl=document.getElementById('wrap');
+  const W=wrapEl.clientWidth, H=wrapEl.clientHeight, PAD=50;
+  const xs=BLOCKS.map(b=>b.px), ys=BLOCKS.map(b=>b.py);
+  const x0=Math.min(...xs)-PAD, x1=Math.max(...xs)+BW+PAD;
+  const y0=Math.min(...ys)-PAD, y1=Math.max(...ys)+BH+PAD;
+  const cx=(x0+x1)/2, cy=(y0+y1)/2;
+  sc=Math.min(W/(x1-x0),H/(y1-y0))*0.92;
+  sc=Math.min(sc,1.4);
+  tx=W/2-cx*sc; ty=H/2-cy*sc;
+  applyXform();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ⑰  INIT
+// ═══════════════════════════════════════════════════════════════
+buildGroups();
+buildEdges();
+buildCards();
+fitAll();
+
+fetch('http://localhost:3000/api/architecture')
+  .then(r=>r.json()).then(r=>r.success&&console.log('✅ API OK'))
+  .catch(()=>console.log('ℹ️ Using embedded data'));
+
+// ═══════════════════════════════════════════════════════════════
+// ⑱  ML DATASETS
+// ═══════════════════════════════════════════════════════════════
+const ML_CCLR={extends_to:'#22c55e',upgrades_to:'#f59e0b',compare_to:'#94a3b8',is_a_type_of:'#6366f1',combines_with:'#06b6d4',builds_on:'#ec4899'};
+const ML_CLBL={extends_to:'extends to',upgrades_to:'upgrades to',compare_to:'compare',is_a_type_of:'is a type of',combines_with:'combines with',builds_on:'builds on'};
+
+const ML_SL={
+  cclr:ML_CCLR,clbl:ML_CLBL,
+  vmeta:{
+    linear_clf:          {dot:'#8b5cf6',tBg:'#ede9fe',tFg:'#6d28d9',tags:['#linear','#simple','#fast']},
+    logistic_regression: {dot:'#6366f1',tBg:'#e0e7ff',tFg:'#3730a3',tags:['#probability','#binary','#baseline']},
+    knn:                 {dot:'#a855f7',tBg:'#f3e8ff',tFg:'#7e22ce',tags:['#lazy','#distance','#non-parametric']},
+    svm:                 {dot:'#ec4899',tBg:'#fce7f3',tFg:'#be185d',tags:['#kernel','#margin','#powerful']},
+    random_forest:       {dot:'#22c55e',tBg:'#dcfce7',tFg:'#15803d',tags:['#ensemble','#bagging','#robust']},
+    xgboost:             {dot:'#f59e0b',tBg:'#fef3c7',tFg:'#b45309',tags:['#boosting','#kaggle','#sota']},
+    linear_regression:   {dot:'#3b82f6',tBg:'#dbeafe',tFg:'#1d4ed8',tags:['#continuous','#ols','#interpretable']},
+    lasso_regression:    {dot:'#06b6d4',tBg:'#cffafe',tFg:'#0e7490',tags:['#l1','#sparse','#feature-select']},
+    multivariable_reg:   {dot:'#64748b',tBg:'#f1f5f9',tFg:'#334155',tags:['#multivariate','#coefficients']}
+  },
+  groups:[
+    {label:'① Classification Problems',ids:['linear_clf','logistic_regression','knn','svm','random_forest','xgboost'],color:'#8b5cf6'},
+    {label:'② Regression Problems',    ids:['linear_regression','lasso_regression','multivariable_reg'],           color:'#3b82f6'}
+  ],
+  compat:{
+    'linear_clf|knn':{ok:true,why:'KNN is a great non-parametric baseline alongside a linear classifier. If a linear classifier scores 82% and KNN 80%, the linear boundary captures the main structure.',analogy:'A ruler before a laser cutter — start simple to set the benchmark.',need:[],needExplain:''},
+    'svm|random_forest':{ok:true,why:'SVM excels on high-dimensional sparse data (text); Random Forest handles mixed tabular features. Run both with cross-validation and pick the winner.',analogy:'A scalpel vs a Swiss Army knife — different strengths, same goal.',need:[],needExplain:'Use GridSearchCV on both, compare AUC.'},
+    'linear_regression|xgboost':{ok:true,why:'Always establish a linear baseline. If XGBoost is barely better the relationship is genuinely linear and the simpler model wins (interpretability + speed).',analogy:'The null hypothesis of ML: start simple, add complexity only when justified.',need:[],needExplain:''},
+    'logistic_regression|svm':{ok:true,why:'Logistic Regression is fast and interpretable (log-odds). SVM often achieves higher accuracy but is a black-box. Common pipeline: LR for insights, SVM for performance.',analogy:'LR explains WHY; SVM just makes the best decision.',need:[],needExplain:''},
+    'lasso_regression|random_forest':{ok:true,why:'Lasso selects features (zeros out unimportant weights). Those selected features then feed a Random Forest — a powerful feature-selection → modelling pipeline.',analogy:'Lasso is the editor who cuts unnecessary chapters; Random Forest is the publisher producing the final book.',need:[],needExplain:''},
+    'xgboost|knn':{ok:false,why:'KNN is lazy (stores all data, predicts by distance search). XGBoost learns decision rules. They are alternative approaches, not complementary ones.',analogy:'One chef memorises every meal; the other follows recipes. Pick one approach.',need:[],needExplain:'KNN fails at large scale; XGBoost scales to millions of rows.'}
+  },
+  blocks:[
+    {id:'linear_clf',label:'Linear Classifier',desc:'Separates classes with a straight-line hyperplane. The simplest classification boundary.',detail:'A linear classifier assigns class labels based on a weighted sum of input features plus a bias. It learns one weight per feature, drawing a flat decision boundary (hyperplane) in feature space. Works perfectly when classes are linearly separable — zero non-linearity.',simple:'🏈 <strong>Plain English:</strong> Draw one straight line on a scatter plot to separate red dots from blue dots. A linear classifier finds exactly that line. Simple, transparent, and extremely fast.',useCases:['Spam vs not-spam (word count features)','Sentiment: positive vs negative reviews','Binary medical diagnosis','Simple fraud classification'],tools:['sklearn.linear_model.LogisticRegression()','sklearn.svm.LinearSVC()','numpy for feature matrix ops','matplotlib to plot the decision boundary'],pos:{x:0,y:0},conns:[{t:'logistic_regression',c:'extends_to'}]},
+    {id:'logistic_regression',label:'Logistic Regression',desc:'Predicts probability of a binary outcome via sigmoid. Go-to classification baseline.',detail:'Despite the name, logistic regression is classification. It models P(y=1|x) using sigmoid σ(w·x+b), squashing output to [0,1]. Trained by minimising binary cross-entropy. Outputs calibrated probabilities; coefficients are interpretable as log-odds.',simple:'🎲 <strong>Plain English:</strong> Instead of just "spam/not spam", logistic regression says "87% chance this is spam." It predicts probabilities. Like a weather forecast — not just "will it rain?" but "73% chance of rain".',useCases:['Medical: P(disease | symptoms)','Banking: P(loan default)','Marketing: P(click on ad)','A/B testing: conversion significance'],tools:['sklearn.linear_model.LogisticRegression()','pandas for feature encoding','seaborn for calibration curves','sklearn.metrics: roc_auc_score, classification_report'],pos:{x:1,y:0},conns:[{t:'svm',c:'compare_to'},{t:'linear_clf',c:'is_a_type_of'}]},
+    {id:'knn',label:'K-Nearest Neighbor (KNN)',desc:'Classifies by majority vote of the K closest training points. No training phase needed.',detail:'KNN stores all training data and classifies a new point by finding its K nearest neighbours (by distance), then taking majority vote. K=1 overfits; large K underfits. No model parameters are learned — prediction is a distance search.',simple:'🏘 <strong>Plain English:</strong> Surrounded by 5 doctors, 1 teacher, 1 chef? KNN says you\'re probably a doctor. It classifies by neighbourhood majority vote. Zero training — just memory and proximity.',useCases:['Recommendation systems (users like you liked X)','Anomaly detection (far from all clusters = anomaly)','Small-dataset image recognition','Medical: similar symptom profiles → similar diagnosis'],tools:['sklearn.neighbors.KNeighborsClassifier()','numpy for vectorised distance computation','seaborn for decision boundary visualisation','sklearn.model_selection.GridSearchCV to tune K'],pos:{x:2,y:0},conns:[{t:'svm',c:'compare_to'}]},
+    {id:'svm',label:'Support Vector Machine (SVM)',desc:'Maximum-margin hyperplane classifier. Kernel trick handles non-linear boundaries.',detail:'SVM finds the hyperplane that maximises the margin between classes. Points closest to the boundary are "support vectors". The kernel trick (RBF, polynomial) maps data to higher dimensions, enabling curved boundaries without directly computing them. C controls margin/error trade-off.',simple:'🥊 <strong>Plain English:</strong> SVM draws the widest possible road between two groups. The road edges are defined by the closest points (support vectors). Wider road = more confident. The kernel trick draws curved roads via clever maths.',useCases:['Text classification (high-dimensional sparse data)','Face detection in images','Bioinformatics: gene/protein classification','Handwriting digit recognition (MNIST)'],tools:['sklearn.svm.SVC(kernel="rbf")','sklearn.preprocessing.StandardScaler — CRITICAL (SVM sensitive to scale)','numpy','matplotlib for 2D decision boundary plots'],pos:{x:3,y:0},conns:[{t:'random_forest',c:'compare_to'}]},
+    {id:'random_forest',label:'Random Forest',desc:'Ensemble of hundreds of decision trees on random data+feature subsets. Majority vote.',detail:'Builds N trees, each on a bootstrap sample using a random subset of features per split (bagging). Predictions: majority vote (classification) or mean (regression). Randomness decorrelates trees. Built-in feature importance via mean decrease in impurity.',simple:'🌲 <strong>Plain English:</strong> Ask 500 randomly-picked experts who each only see part of the data. Their majority vote is far more reliable than any single expert. Wisdom-of-crowds applied to decision trees.',useCases:['Fraud detection (banking, insurance)','Medical diagnosis (ensemble of clinical rules)','Stock risk scoring','Feature importance ranking'],tools:['sklearn.ensemble.RandomForestClassifier(n_estimators=200)','pandas for data prep','seaborn feature importance heatmap','matplotlib for tree depth visualisation'],pos:{x:4,y:0},conns:[{t:'xgboost',c:'compare_to'}]},
+    {id:'xgboost',label:'XGBoost',desc:'Extreme Gradient Boosting. Each sequential tree corrects the errors of all previous trees.',detail:'Unlike Random Forest (parallel), XGBoost is sequential boosting. Tree t fits residual errors of trees 1…t-1. L1+L2 regularisation prevents overfitting. Handles missing values natively. Dominant algorithm in Kaggle tabular competitions.',simple:'📈 <strong>Plain English:</strong> 500 students study only the questions the group got wrong after each round. Over rounds the group improves by targeting weaknesses. XGBoost does this with decision trees — each new tree patches previous mistakes.',useCases:['Kaggle competition winner on tabular data','Real-time credit scoring','CTR prediction in ad systems','Disease prediction from EHR data'],tools:['xgboost.XGBClassifier()','sklearn.model_selection.GridSearchCV for hyperparameter tuning','pandas + numpy for data prep','shap for SHAP value feature attribution'],pos:{x:5,y:0},conns:[]},
+    {id:'linear_regression',label:'Linear Regression',desc:'Models the linear relationship between features and a continuous target. The regression baseline.',detail:'Fits a hyperplane Y = w·X + b minimising sum of squared residuals (OLS). Coefficients are interpretable: w_i = unit change in Y per unit change in X_i, holding all else equal. Ultra-fast; great interpretability.',simple:'📏 <strong>Plain English:</strong> "Every extra year of experience = $5,000 salary increase." Linear regression finds those exact multipliers. It draws the best-fit line through a scatter plot — predict Y from any X by reading off the line.',useCases:['House price estimation','Sales revenue forecasting','Insurance premium calculation','Economic indicator modelling'],tools:['sklearn.linear_model.LinearRegression()','numpy.polyfit() for simple 1D case','pandas for data manipulation','seaborn.regplot() + matplotlib for residual diagnostic plots'],pos:{x:0,y:2},conns:[{t:'lasso_regression',c:'extends_to'},{t:'multivariable_reg',c:'extends_to'}]},
+    {id:'lasso_regression',label:'Lasso Regression',desc:'Linear regression + L1 penalty. Drives unimportant feature weights to exactly zero — auto feature selection.',detail:'Lasso adds λ·Σ|w_i| to OLS cost. The L1 penalty creates sparse solutions: unimportant feature weights are driven to exactly zero, removing them. α controls sparsity — higher α = more features zeroed. LassoCV automates α selection.',simple:'✂️ <strong>Plain English:</strong> Linear regression with a ruthless editor. After fitting, Lasso cuts any feature that doesn\'t contribute enough — sets its weight to 0. You get a simpler model using only genuinely important features.',useCases:['Genomics: 50 relevant genes from 20,000+','Financial: predictive indicators from hundreds','NLP: key words from thousands of vocabulary terms','Neuroimaging: relevant brain voxels'],tools:['sklearn.linear_model.Lasso(alpha=0.1)','sklearn.linear_model.LassoCV() — auto tunes alpha','numpy + pandas for data prep','matplotlib for regularisation path'],pos:{x:1,y:2},conns:[]},
+    {id:'multivariable_reg',label:'Multivariable Regression',desc:'Linear regression with multiple inputs simultaneously. Workhorse of quantitative analysis.',detail:'Y = w₁X₁ + w₂X₂ + … + wₙXₙ + b. Each coefficient measures the marginal effect of one feature holding all others constant (ceteris paribus). Assumes low multicollinearity (check VIF). Statsmodels gives p-values and confidence intervals.',simple:'🎛 <strong>Plain English:</strong> House price = (size × $200) + (bedrooms × $15k) + (location × $50k). Multiple regression finds those exact multipliers for ALL features simultaneously — one equation, many input knobs.',useCases:['Real estate valuation (size + location + age + bedrooms)','Employee salary prediction','Clinical outcomes from multiple vital signs','Marketing: revenue from multiple channel spends'],tools:['sklearn.linear_model.LinearRegression()','statsmodels.api.OLS() — p-values and confidence intervals','pandas for feature engineering + correlation matrix','seaborn.heatmap() for multicollinearity, pairplot() for relationships'],pos:{x:2,y:2},conns:[]}
+  ]
+};
+
+const ML_UL={
+  cclr:ML_CCLR,clbl:ML_CLBL,
+  vmeta:{
+    partitional_c:{dot:'#06b6d4',tBg:'#cffafe',tFg:'#0e7490',tags:['#k-means','#centroid','#partitions']},
+    hierarchical_c:{dot:'#8b5cf6',tBg:'#ede9fe',tFg:'#6d28d9',tags:['#dendrogram','#agglomerative']},
+    kmeans:{dot:'#3b82f6',tBg:'#dbeafe',tFg:'#1d4ed8',tags:['#centroid','#k-clusters','#iterative']},
+    hier_assoc:{dot:'#a855f7',tBg:'#f3e8ff',tFg:'#7e22ce',tags:['#dendrogram','#no-k-needed']},
+    pca:{dot:'#f59e0b',tBg:'#fef3c7',tFg:'#b45309',tags:['#eigenvectors','#variance','#2d-3d']},
+    dbscan:{dot:'#ec4899',tBg:'#fce7f3',tFg:'#be185d',tags:['#density','#noise','#arbitrary-shape']}
+  },
+  groups:[
+    {label:'① Partitional Clustering',  ids:['partitional_c','kmeans','dbscan'],     color:'#06b6d4'},
+    {label:'② Hierarchical Clustering', ids:['hierarchical_c','hier_assoc','pca'],   color:'#8b5cf6'}
+  ],
+  compat:{
+    'kmeans|pca':{ok:true,why:'PCA reduces dimensionality first, removing noise and compressing features. K-Means then clusters in the reduced space — dramatically better on high-dimensional data.',analogy:'PCA is the map-maker who reduces a 3D landscape to a clean 2D map. K-Means draws cluster boundaries on that map.',need:[],needExplain:'Pipeline: StandardScaler → PCA(n_components=2) → KMeans. Visualise with scatter.'},
+    'dbscan|kmeans':{ok:true,why:'Use DBSCAN when you don\'t know k and suspect noise or arbitrary shapes. Use K-Means when k is known and data is roughly spherical. Run both and compare silhouette scores.',analogy:'K-Means partitions a city into equal districts. DBSCAN finds natural neighbourhoods and labels rural areas as noise.',need:[],needExplain:''},
+    'hierarchical_c|kmeans':{ok:true,why:'Run Hierarchical first — the dendrogram reveals the natural number of clusters. Use that k in K-Means for the final scalable partitioning.',analogy:'The dendrogram is the blueprint that tells you how many rooms to build. K-Means efficiently constructs those rooms.',need:[],needExplain:'Hierarchical is O(n²) — use it for insight on <10k samples; K-Means for production scale.'},
+    'pca|dbscan':{ok:true,why:'PCA removes noisy dimensions before DBSCAN. Density estimation degrades severely in high dimensions (curse of dimensionality). PCA preprocessing dramatically improves results.',analogy:'PCA clears the fog; DBSCAN can then clearly see which cars are parked together.',need:[],needExplain:''},
+    'partitional_c|hierarchical_c':{ok:true,why:'Partitional (K-Means) is fast and requires k. Hierarchical is exploratory and reveals structure at every scale. Use both during EDA — they answer complementary questions.',analogy:'Partitional redraws country borders. Hierarchical reads an evolution tree — every level shows a different scale of relatedness.',need:[],needExplain:''}
+  },
+  blocks:[
+    {id:'partitional_c',label:'Partitional Clustering',desc:'Divides data into K non-overlapping groups by optimising a partition criterion (e.g. intra-cluster variance).',detail:'Partitional clustering simultaneously assigns all points to exactly one of K clusters, optimising a global criterion such as minimising within-cluster sum of squared distances. Requires specifying K. Assumes roughly spherical, similarly-sized clusters. Very fast and scalable.',simple:'🍕 <strong>Plain English:</strong> Slice a pizza into K equal pieces. Every slice gets a roughly equal share of toppings. Partitional clustering is exactly this — divide everything into K non-overlapping groups. The challenge: picking K wisely.',useCases:['Customer segmentation (K buyer personas)','Image compression (K colour palette)','Document topic grouping','Geographic zone definition'],tools:['sklearn.cluster.KMeans(n_clusters=K)','sklearn.metrics.silhouette_score() to find best K','matplotlib scatter with cluster colours','yellowbrick KElbowVisualizer for optimal K'],pos:{x:0,y:0},conns:[{t:'kmeans',c:'is_a_type_of'}]},
+    {id:'kmeans',label:'K-Means Clustering',desc:'Assigns points to nearest centroid, updates centroids, repeats until convergence. Fast and scalable.',detail:'K-Means iterates: (1) Assign each point to nearest centroid. (2) Update each centroid to mean of assigned points. Repeat until stable. k-means++ initialisation (sklearn default) reduces bad local optima. O(n·k·d·iterations) — scales to millions of points.',simple:'📍 <strong>Plain English:</strong> Plant K flags randomly on a map. Each person walks to their nearest flag. Move each flag to the middle of its crowd. Repeat. After several rounds, flags settle into the natural centres of the groups.',useCases:['Market segmentation for targeted marketing','Image colour quantisation','Compressing embeddings in recommendations','Anomaly detection: points far from all centroids'],tools:['sklearn.cluster.KMeans(n_clusters=5, init="k-means++", n_init=10)','sklearn.preprocessing.StandardScaler — CRITICAL (K-Means uses distance)','matplotlib scatter + centroid markers','yellowbrick KElbowVisualizer for optimal K'],pos:{x:1,y:0},conns:[{t:'dbscan',c:'compare_to'}]},
+    {id:'dbscan',label:'DBSCAN',desc:'Density-based clustering. Groups dense regions; marks isolated points as noise. No k required.',detail:'DBSCAN labels a point "core" if it has ≥MinPts neighbours within radius ε. Core points form clusters; reachable points join clusters; remaining points are labelled "noise". Discovers arbitrarily shaped clusters, robust to outliers, no k needed. Parameters: ε and MinPts.',simple:'🌆 <strong>Plain English:</strong> DBSCAN finds dense neighbourhoods (lots of points within walking distance ε). Dense areas become clusters. Isolated points in the countryside are labelled "noise" and excluded. Perfect for real-world shapes — not just circles.',useCases:['Anomaly detection (noise points = anomalies)','GPS trajectory clustering (common routes)','Astronomy: galaxy cluster identification','Fraud detection: unusual transaction clusters','Traffic hotspot analysis'],tools:['sklearn.cluster.DBSCAN(eps=0.5, min_samples=5)','sklearn.neighbors.NearestNeighbors to find optimal eps','numpy + pandas for data prep','matplotlib scatter with noise points in black'],pos:{x:2,y:0},conns:[]},
+    {id:'hierarchical_c',label:'Hierarchical Clustering',desc:'Builds a tree of clusters (dendrogram). No k needed — cut the tree at any height to get any number of clusters.',detail:'Agglomerative (bottom-up): start with each point as its own cluster, repeatedly merge the two closest. Linkage criterion (single, complete, average, Ward) determines cluster distance. Dendrogram reveals the natural number of clusters — no k required.',simple:'🌳 <strong>Plain English:</strong> Like a family tree for data points. Every point starts alone. The two most similar merge into a family. Families merge into clans. The tree shows every level of relatedness — you choose where to "cut" to get the number of groups you want.',useCases:['Gene expression analysis (similar behaving genes)','Social network community detection','Document similarity grouping','Finding natural taxonomy in biological data'],tools:['sklearn.cluster.AgglomerativeClustering()','scipy.cluster.hierarchy.dendrogram()','scipy.cluster.hierarchy.linkage()','seaborn.clustermap() — heatmap + dendrogram combined'],pos:{x:0,y:2},conns:[{t:'hier_assoc',c:'is_a_type_of'}]},
+    {id:'hier_assoc',label:'Hierarchical Clustering (impl.)',desc:'Implementation: builds linkage matrix bottom-up, producing full cluster hierarchy without needing k.',detail:'Agglomerative implementation computes an n×n distance matrix then greedily merges using a linkage criterion: single, complete, average, or Ward (minimises within-cluster variance — usually best). Result is a linkage matrix renderable as a dendrogram. Cut at height h gives a specific k.',simple:'🔬 <strong>Plain English:</strong> Start with 1000 points in 1000 clusters. Find the two most similar — merge (999 clusters). Record every merge. At the end ONE cluster contains everything. That full record IS the dendrogram — every possible clustering at once.',useCases:['Bioinformatics: phylogenetic trees from gene sequences','Customer LTV segmentation without knowing k','Exploratory data analysis of data structure','Document clustering with cosine distance'],tools:['scipy.cluster.hierarchy.linkage(X, method="ward")','scipy.cluster.hierarchy.fcluster() — cut at height','seaborn.clustermap()','sklearn.cluster.AgglomerativeClustering(n_clusters=None, distance_threshold=t)'],pos:{x:1,y:2},conns:[{t:'pca',c:'combines_with'}]},
+    {id:'pca',label:'PCA (Principal Component Analysis)',desc:'Reduces dimensionality by projecting onto maximum-variance directions. Unsupervised feature engineering.',detail:'PCA finds orthogonal principal components that maximise explained variance. PC1 explains the most, PC2 the second most, etc. Implemented via SVD of centred data. Reduces D dimensions to k components. Also used for noise reduction and visualisation (project to 2D/3D).',simple:'🗺 <strong>Plain English:</strong> A 3D cloud of data points. PCA finds the best angle to photograph it from — the angle where the 2D photo captures the most information. It rotates and projects data onto the directions of maximum spread.',useCases:['Visualising high-dimensional data in 2D/3D','Removing noise from images and signals','Preprocessing before K-Means or classification','Face recognition (eigenfaces)','Gene expression analysis (1000s of genes → 2D)'],tools:['sklearn.decomposition.PCA(n_components=2)','sklearn.preprocessing.StandardScaler — CRITICAL (PCA is variance-based)','matplotlib for 2D/3D scatter of components','seaborn for explained variance plot (pca.explained_variance_ratio_)'],pos:{x:2,y:2},conns:[]}
+  ]
+};
+
+const ML_RL={
+  cclr:ML_CCLR,clbl:ML_CLBL,
+  vmeta:{
+    q_learning:      {dot:'#3b82f6',tBg:'#dbeafe',tFg:'#1d4ed8',tags:['#q-table','#model-free','#classic']},
+    dqn:             {dot:'#8b5cf6',tBg:'#ede9fe',tFg:'#6d28d9',tags:['#deep-rl','#neural-net','#atari']},
+    policy_gradient: {dot:'#f59e0b',tBg:'#fef3c7',tFg:'#b45309',tags:['#policy','#stochastic','#gradient']},
+    ppo:             {dot:'#22c55e',tBg:'#dcfce7',tFg:'#15803d',tags:['#stable','#clip','#sota']}
+  },
+  groups:[
+    {label:'① Value-Based Methods',  ids:['q_learning','dqn'],          color:'#3b82f6'},
+    {label:'② Policy-Based Methods', ids:['policy_gradient','ppo'],      color:'#f59e0b'}
+  ],
+  compat:{
+    'q_learning|dqn':{ok:true,why:'DQN IS Q-Learning with the Q-table replaced by a deep neural network. Q-Learning is the prerequisite concept. Use DQN when the state space is too large for a table.',analogy:'Q-Learning is a paper notebook of every situation. DQN is a brain that generalises to new situations it has never seen.',need:[],needExplain:'Master Q-Learning first; DQN is a direct extension.'},
+    'policy_gradient|ppo':{ok:true,why:'PPO IS a policy gradient method — an improved, stabilised version. Vanilla PG suffers high variance; PPO clips updates to prevent destructively large steps.',analogy:'Policy gradient is a sports car — fast but dangerous. PPO adds a speed limiter and better suspension — nearly as fast, far more stable.',need:[],needExplain:'PPO (OpenAI 2017) is the industry default. Understand PG first, then graduate to PPO.'},
+    'dqn|ppo':{ok:true,why:'DQN (value-based) and PPO (policy-based) are complementary. DQN works on discrete action spaces; PPO handles continuous ones (robotics). Actor-Critic methods combine both.',analogy:'DQN is a chess player who memorises position values. PPO learns a playing style. Modern agents (AlphaGo) combine both.',need:[],needExplain:'Discrete games → DQN or Rainbow. Continuous control → PPO or SAC.'},
+    'q_learning|policy_gradient':{ok:true,why:'These are two schools of RL. Value-based estimates how good states are. Policy-based directly optimises the policy. Actor-Critic architectures combine a value network with a policy network.',analogy:'Q-Learning maps terrain value. Policy gradient learns the best routes directly. Actor-Critic is both working together.',need:['dqn','ppo'],needExplain:'To combine them: use Actor-Critic (A2C, A3C, SAC) which maintains both a value function (critic) and a policy (actor).'}
+  },
+  blocks:[
+    {id:'q_learning',label:'Q-Learning',desc:'Model-free RL. Learns a Q-table mapping (state, action) → expected future reward. Foundation of value-based RL.',detail:'Learns Q(s,a) = expected cumulative discounted reward of taking action a in state s, then acting optimally. Bellman update: Q(s,a) ← Q(s,a) + α[r + γ·max_a\'Q(s\',a\') − Q(s,a)]. Converges to optimal Q* for finite discrete state-action spaces. Model-free. Foundation of DQN.',simple:'📚 <strong>Plain English:</strong> A robot in a maze writes in a notebook: "from room 3, going right gave me +5 reward." Over thousands of tries, the notebook fills with scores for every (room, direction) pair. Eventually it knows the best move in every room. That notebook IS the Q-table.',useCases:['Simple grid-world navigation','Game playing (Tic-tac-toe, simple arcade games)','Robot path planning on discrete grid','Teaching RL concepts — prerequisite for DQN'],tools:['numpy for Q-table (2D array: states × actions)','gym / Gymnasium for environments','matplotlib for reward-per-episode training curves','Pure Python — implementable in ~50 lines'],pos:{x:0,y:0},conns:[{t:'dqn',c:'builds_on'}]},
+    {id:'dqn',label:'Deep Q-Network (DQN)',desc:'Q-Learning where the Q-table is a deep neural network. Scales to huge state spaces like raw pixels.',detail:'DQN (DeepMind 2013) replaces the Q-table with a neural network Q(s,a;θ). Key innovations: (1) Experience Replay — replay buffer breaks temporal correlations. (2) Target Network — slow-updating network for stable Bellman targets. Extensions: Double DQN, Dueling DQN, Prioritised Experience Replay.',simple:'🧠 <strong>Plain English:</strong> Q-Learning uses a notebook with one row per situation. DQN replaces the notebook with a brain (neural network) that generalises — it can handle new situations it has never exactly seen before.',useCases:['Atari game playing (Pong, Breakout, Space Invaders)','Trading strategy optimisation','Resource scheduling in data centres','Network routing optimisation'],tools:['torch or tensorflow for the neural network','gymnasium for environments','numpy for replay buffer sampling','stable-baselines3 — production-grade DQN implementation'],pos:{x:1,y:0},conns:[]},
+    {id:'policy_gradient',label:'Policy Gradient Method',desc:'Directly optimises the policy π(a|s) using gradient ascent on expected reward. Works on continuous actions.',detail:'Parameterises the policy as π_θ(a|s) and maximises E[cumulative reward] via gradient ascent. REINFORCE estimates gradient as ∇_θ log π_θ(a|s) · G_t where G_t is the return. High variance (mitigated by baselines). Foundation of PPO, A3C, and RLHF.',simple:'🎭 <strong>Plain English:</strong> If an action led to reward → make it more likely. If penalty → make it less likely. Policy gradient adjusts the agent\'s behaviour directly without a value table. Reinforcement learning in the most literal sense.',useCases:['Continuous robot arm joint control','Natural language generation (RLHF — training ChatGPT)','Car racing with continuous steering/throttle','Multi-agent coordination'],tools:['torch for policy network','gymnasium for environments','numpy for trajectory collection','stable-baselines3 for production use','wandb for training monitoring'],pos:{x:0,y:2},conns:[{t:'ppo',c:'builds_on'}]},
+    {id:'ppo',label:'Proximal Policy Optimization (PPO)',desc:'Stabilised policy gradient. Clips updates so the policy never changes too drastically in one step.',detail:'PPO clips the probability ratio r_t(θ) = π_θ(a|s)/π_θ_old(a|s) to [1-ε, 1+ε], preventing catastrophically large policy updates. Uses multiple epochs of mini-batch gradient ascent on collected trajectories. Currently the most widely used RL algorithm — ChatGPT RLHF, OpenAI Five, and AlphaCode all use PPO.',simple:'🏎 <strong>Plain English:</strong> Vanilla policy gradient is a car with no speed limit — one bad update can crash training. PPO adds a speed limiter: you can improve, but by no more than ε at a time. Stable, reproducible, and the current gold standard.',useCases:['ChatGPT RLHF training (making LLMs follow instructions)','OpenAI Five — beat world champions at Dota 2','Robotics: locomotion and dexterous manipulation','Google data centre cooling optimisation','Commercial game AI'],tools:['stable-baselines3.PPO — easiest production use','torch for custom actor-critic networks','gymnasium for environments','wandb or tensorboard for training curves','numpy for advantage estimation'],pos:{x:1,y:2},conns:[]}
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ⑲  VIEW ENGINE  —  activateViewData(), switchTab(), enterMLView(), goBack()
+//    Also: restoreAtlassian(), setCanvasControls(), ATLASSIAN_SNAP
+// ═══════════════════════════════════════════════════════════════
+let currentTab='atlassian';
+let currentMLView=null;
+
+// Snapshot Atlassian state (BLOCKS already have px/py from init)
+const ATLASSIAN_SNAP={
+  blocks:BLOCKS.map(b=>({...b})),
+  groups:GROUPS.map(g=>({...g})),
+  cclr:{...CCLR}, clbl:{...CLBL},
+  vmeta:VMETA, compat:{...COMPAT}
+};
+window._ACTIVE_VMETA=VMETA;
+
+function getVMETA(id){return(window._ACTIVE_VMETA||VMETA)[id];}
+
+/**
+ * Swaps ALL global rendering arrays in-place to load a new view's data.
+ * This lets the single rendering pipeline (buildGroups/buildEdges/
+ * buildCards) serve every topic tab without modification.
+ *
+ * After swapping: clears selection, rebuilds all DOM layers, rebuilds
+ * the legend, and auto-fits the view.
+ *
+ * @param {Object} vd - view data object with shape:
+ *   { blocks[], groups[], vmeta{}, cclr{}, clbl{}, compat{} }
+ *   See the NODE DATA SCHEMA comment block at the top of this file.
+ */
+function activateViewData(vd){
+  BLOCKS.length=0;
+  vd.blocks.forEach(b=>{
+    b.px=b.pos.x*COL_W+OX; b.py=b.pos.y*ROW_H+OY;
+    BLOCKS.push(b);
+  });
+  Object.keys(BY_ID).forEach(k=>delete BY_ID[k]);
+  BLOCKS.forEach(b=>{BY_ID[b.id]=b;});
+  GROUPS.length=0; vd.groups.forEach(g=>GROUPS.push(g));
+  Object.keys(CCLR).forEach(k=>delete CCLR[k]); Object.assign(CCLR,vd.cclr||ML_CCLR);
+  Object.keys(CLBL).forEach(k=>delete CLBL[k]); Object.assign(CLBL,vd.clbl||ML_CLBL);
+  Object.keys(COMPAT).forEach(k=>delete COMPAT[k]); Object.assign(COMPAT,vd.compat||{});
+  window._ACTIVE_VMETA=vd.vmeta||{};
+  clearSel(); buildGroups(); buildEdges(); buildCards(); rebuildLegend(); fitAll();
+}
+
+function restoreAtlassian(){
+  BLOCKS.length=0; ATLASSIAN_SNAP.blocks.forEach(b=>BLOCKS.push(b));
+  Object.keys(BY_ID).forEach(k=>delete BY_ID[k]); BLOCKS.forEach(b=>{BY_ID[b.id]=b;});
+  GROUPS.length=0; ATLASSIAN_SNAP.groups.forEach(g=>GROUPS.push(g));
+  Object.keys(CCLR).forEach(k=>delete CCLR[k]); Object.assign(CCLR,ATLASSIAN_SNAP.cclr);
+  Object.keys(CLBL).forEach(k=>delete CLBL[k]); Object.assign(CLBL,ATLASSIAN_SNAP.clbl);
+  Object.keys(COMPAT).forEach(k=>delete COMPAT[k]); Object.assign(COMPAT,ATLASSIAN_SNAP.compat);
+  window._ACTIVE_VMETA=ATLASSIAN_SNAP.vmeta;
+  clearSel(); buildGroups(); buildEdges(); buildCards(); rebuildLegend(); fitAll();
+}
+
+const canvasCtrlIds=['fit-btn','zoom-out-btn','zoom-in-btn','compat-btn','lgnd-btn','zoom-val'];
+function setCanvasControls(on){
+  canvasCtrlIds.forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=on?'':'none';});
+}
+
+function switchTab(tab){
+  currentTab=tab;
+  document.getElementById('tab-atlassian').classList.toggle('active-tab',tab==='atlassian');
+  document.getElementById('tab-ml').classList.toggle('active-tab',tab==='ml');
+  document.getElementById('mode-bar').className='hidden';
+  if(tab==='atlassian'){
+    currentMLView=null;
+    document.getElementById('ml-hub').classList.remove('active');
+    document.getElementById('wrap').style.display='';
+    document.getElementById('back-btn').classList.remove('visible');
+    document.getElementById('bar-title').textContent='API Gateway & Edge Fleet Architecture';
+    document.getElementById('bar-sub').textContent='Vasilios Syrakis · Interactive Architecture Visualizer';
+    setCanvasControls(true);
+    restoreAtlassian();
+  } else {
+    currentMLView=null;
+    document.getElementById('wrap').style.display='none';
+    document.getElementById('ml-hub').classList.add('active');
+    document.getElementById('back-btn').classList.remove('visible');
+    document.getElementById('bar-title').textContent='Machine Learning';
+    document.getElementById('bar-sub').textContent='Interactive Algorithm Visualizer';
+    setCanvasControls(false);
+  }
+}
+
+const ML_META={
+  supervised:   {data:ML_SL, label:'Supervised Learning',    sub:'Classification & Regression Algorithms'},
+  unsupervised: {data:ML_UL, label:'Unsupervised Learning',  sub:'Clustering & Dimensionality Reduction'},
+  reinforcement:{data:ML_RL, label:'Reinforcement Learning', sub:'Value-Based & Policy-Based Methods'}
+};
+
+/**
+ * Enters a Machine Learning sub-view from the ML hub.
+ * Hides the hub, shows the canvas, updates the title bar,
+ * shows the back button, and loads the view data.
+ *
+ * @param {string} key - one of: 'supervised' | 'unsupervised' | 'reinforcement'
+ *                        (must match a key in ML_META)
+ */
+function enterMLView(key){
+  const meta=ML_META[key]; if(!meta) return;
+  currentMLView=key;
+  document.getElementById('ml-hub').classList.remove('active');
+  document.getElementById('wrap').style.display='';
+  document.getElementById('back-btn').classList.add('visible');
+  document.getElementById('bar-title').textContent=meta.label;
+  document.getElementById('bar-sub').textContent=meta.sub;
+  setCanvasControls(true);
+  activateViewData(meta.data);
+}
+
+/**
+ * Returns from an ML sub-view to the ML hub card selection screen.
+ * Hides the canvas, shows the hub, hides the back button, resets
+ * the title bar, and hides canvas controls + mode bar.
+ */
+function goBack(){
+  if(currentMLView){
+    currentMLView=null;
+    document.getElementById('wrap').style.display='none';
+    document.getElementById('ml-hub').classList.add('active');
+    document.getElementById('back-btn').classList.remove('visible');
+    document.getElementById('bar-title').textContent='Machine Learning';
+    document.getElementById('bar-sub').textContent='Interactive Algorithm Visualizer';
+    setCanvasControls(false);
+    document.getElementById('mode-bar').className='hidden';
+  }
+}
+</script>
+</body>
+</html>
